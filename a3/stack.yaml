@@ -1,4 +1,10 @@
+#resolver:
+  #  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/3.yaml
+
 resolver: lts-21.3
 
 packages:
   - .
+
+extra-deps:
+  - gi-gtk-3.0.41     # This may be different in your case
