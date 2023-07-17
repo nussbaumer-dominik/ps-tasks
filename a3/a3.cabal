@@ -25,7 +25,12 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      FileHandler
+      FileOpener
+      Menu
+      TextEditor
+      TextView
+      Window
   other-modules:
       Paths_a3
   hs-source-dirs:
