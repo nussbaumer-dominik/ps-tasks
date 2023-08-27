@@ -1,5 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
+import helper.versionCatalog
+
 plugins {
     id("org.jetbrains.kotlin.jvm")
 }
@@ -8,10 +10,6 @@ repositories {
     mavenCentral()
 }
 
-testing {
-    suites {
-        val test by getting(JvmTestSuite::class) {
-            useJUnitJupiter("5.9.3")
-        }
-    }
+testing.suites.withType<JvmTestSuite> {
+    useJUnitJupiter(versionCatalog().findVersion("junit.jupiter").get().requiredVersion)
 }

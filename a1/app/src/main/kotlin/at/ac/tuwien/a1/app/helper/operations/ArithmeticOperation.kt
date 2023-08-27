@@ -6,7 +6,7 @@ package at.ac.tuwien.a1.app.helper.operations
 enum class ArithmeticOperation(val representation: String) : CalculatorOperation {
     MULTIPLICATION("*"),
     ADDITION("+"),
-    SUBSTRACTION("-"),
+    SUBTRACTION("-"),
     DIVISION("/"),
     MODULO("%"),
 }
