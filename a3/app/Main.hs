@@ -24,13 +24,9 @@ main = do
 
     buffer <- new Gtk.TextBuffer []
 
-    buttonBox <- new Gtk.Box [#orientation := Gtk.OrientationHorizontal]
-
     button <- new Gtk.Button [#label := "Open"]
     _ <- on button #clicked (openFileDialog initialWindow box buffer)
-    
-    #add buttonBox button
-    #packStart box buttonBox False False 0
+    #setCenterWidget box (Just button)
 
     #showAll initialWindow
 

@@ -1,0 +1,19 @@
+{
+  "name": "a2",
+  "version": "0.0.1",
+  "description": "Task 2 of PS",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nussbaumer-dominik/ps-tasks.git"
+  },
+  "author": "Matthias Schellner, Maximilian Gierlachowski, Fabian Obermann, Dominik Nussbaumer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nussbaumer-dominik/ps-tasks/issues"
+  },
+  "homepage": "https://github.com/nussbaumer-dominik/ps-tasks#readme"
+}
