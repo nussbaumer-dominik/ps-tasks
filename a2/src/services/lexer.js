@@ -1,7 +1,7 @@
 "use strict";
-const Token = require('./token');
-const Type = require('./type');
-require('./operations');
+const Token = require('../models/token');
+const Type = require('../models/type');
+require('../models/operations');
 
 function lex(input) {
     console.log(`lexing input: ${input}`);

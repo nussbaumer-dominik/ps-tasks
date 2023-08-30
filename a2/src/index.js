@@ -3,7 +3,7 @@
 //1. read file from disc
 const fs = require('fs');
 const readline = require('readline');
-const {lex} = require("./lexer");
+const {lex} = require("./services/lexer");
 
 const filePath = 'demo-code.txt';
 
