@@ -6,4 +6,3 @@ const Operations = {
     COND: "cond"
 }
 
-module.exports = Operations;

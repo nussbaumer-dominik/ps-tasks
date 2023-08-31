@@ -9,4 +9,4 @@ const Type = {
     EOF: "end_of_file"
 }
 
-module.exports = Type;
+export { Type };

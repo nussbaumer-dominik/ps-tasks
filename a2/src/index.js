@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 //1. read file from disc
-const fs = require('fs');
-const readline = require('readline');
-const {lex} = require("./services/lexer");
+import fs from 'fs';
+import readline from 'readline';
+import lex from './services/lexer.mjs';
+import {Parser} from './services/parser.mjs';
 
 const filePath = 'demo-code.txt';
 
@@ -19,7 +20,11 @@ const rl = readline.createInterface({
 // Event handler for each line
 rl.on('line', (line) => {
     console.log(`Line from file: ${line}`);
-    console.log(`Lexing result: \n ${JSON.stringify(lex(line), null, 2)}`);
+    let lexResult = lex(line);
+    console.log(`Lexing result: \n ${JSON.stringify(lexResult, null, 2)}`);
+    let parser = new Parser(lexResult);
+    let parseResult = parser.parse();
+    console.log(`Parsing result: \n ${JSON.stringify(parseResult, null, 2)}`);
 });
 
 // Event handler for the end of the file

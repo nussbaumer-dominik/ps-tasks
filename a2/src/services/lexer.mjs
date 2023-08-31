@@ -1,7 +1,6 @@
-"use strict";
-const Token = require('../models/token');
-const Type = require('../models/type');
-require('../models/operations');
+import {Token} from "../models/token.mjs";
+import {Type} from "../models/type.mjs";
+
 
 function lex(input) {
     console.log(`lexing input: ${input}`);
@@ -40,17 +39,17 @@ function lex(input) {
             }
         }
         //check the word length
-        let wordLength = 0;
+        let wordLength = 1;
         let word = input[currentPos];
         while (currentPos + wordLength <= input.length) {
             //check if the word ends
-            if (input[currentPos + wordLength] === '(' || input[currentPos + wordLength] === ')' || input[currentPos + wordLength] === ' ' || currentPos + wordLength + 1 === input.length) {
+            if (input[currentPos + wordLength] === '(' || input[currentPos + wordLength] === ')' || input[currentPos + wordLength] === ' ' || currentPos+wordLength === input.length) {
                 tokens.push(new Token(getType(word), word, currentPos));
-                currentPos = wordLength + currentPos + 1;
+                currentPos += wordLength;
                 break;
             }
-            wordLength++;
             word += input[currentPos + wordLength];
+            wordLength++;
         }
 
     }
@@ -59,7 +58,7 @@ function lex(input) {
 }
 
 function getType(word) {
-    if(word === "plus" || word === "minus" || word === "mult" || word === "div" || word === "cond") {
+    if (word === "plus" || word === "minus" || word === "mult" || word === "div" || word === "cond") {
         return Type.OPERATION
     }
     //check if word is a number
@@ -70,6 +69,4 @@ function getType(word) {
 }
 
 
-module.exports = {
-    lex
-};
+export default lex;
