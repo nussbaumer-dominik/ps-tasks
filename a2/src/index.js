@@ -5,6 +5,7 @@ import fs from 'fs';
 import readline from 'readline';
 import lex from './services/lexer.mjs';
 import parse from "./services/parser.mjs";
+import interpret from "./services/interpreter.mjs";
 
 const filePath = 'test.txt';
 
@@ -28,4 +29,6 @@ rl.on('close',  ()=> {
     console.log(`Lexing result: \n ${JSON.stringify(lexResult, null, 2)}`);
     const parseResult = parse(lexResult);
     console.log(`Parsing result: \n ${JSON.stringify(parseResult, null, 2)}`);
+
+    interpret(parseResult)
 })

@@ -42,16 +42,16 @@ function parseValue(valueTokens) {
         valueTokens.shift();
         valueTokens.shift();
         //check for closing parenthesis
-        let i = valueTokens.length - 1;
+        let i = 0;
         while (valueTokens[i].type !== Type.RCURLY) {
-            i--;
+            i++;
         }
         //split tokens at i
         let exprTokens = valueTokens.splice(0, i);
         //remove closing parenthesis
         valueTokens.shift();
         //TODO multiple
-        basic = new FunctionCall(name, parseValue([exprTokens[0]]));
+        basic = Value.createFunctionCall(new FunctionCall(name, parseValue([exprTokens[0]])));
     }  else if (valueTokens[0].type === Type.ENTITY || valueTokens[0].type === Type.OPERATION) {
         //check for name
         basic = Value.createName(valueTokens[0].text);

@@ -44,7 +44,8 @@ class Value {
     }
 
     static createNumber(number) {
-        return new Value(number);
+        const parsed = parseInt(number, 10);
+        return new Value(parsed);
     }
 
     static createName(name) {
