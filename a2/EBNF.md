@@ -5,7 +5,7 @@
 <basic> ::= <value>
     | <assignment>
 
-<assignment> ::= <name> `:=` <expr>
+<assignment> ::= <name> `:=` <expr><EOL>
 
 <names> ::= <name>
     | <names> ’,’ <name>

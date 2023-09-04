@@ -2,6 +2,8 @@ import {Token} from "../models/token.mjs";
 import {Type} from "../models/type.mjs";
 
 
+const wordBreaks = [' ', '(', ')', '{', '}']
+
 function lex(input) {
     console.log(`lexing input: ${input}`);
     if (input === undefined) {
@@ -30,20 +32,30 @@ function lex(input) {
             currentPos++;
             continue;
         }
-        //check for  "->"
-        if (char === '-') {
-            if (currentPos + 1 < input.length && input[currentPos + 1] === '>') {
-                tokens.push(new Token(Type.LAMBDA, '->', currentPos));
-                currentPos = currentPos + 2;
-                continue;
-            }
+        if (char === '{') {
+            tokens.push(new Token(Type.LCURLY, '{', currentPos));
+            currentPos++;
+            continue;
         }
+        if (char === '}') {
+            tokens.push(new Token(Type.RCURLY, '}', currentPos));
+            currentPos++;
+            continue;
+        }
+        //check for assignment :=
+        if (char === ':' && currentPos + 1 < input.length  && input[currentPos + 1] === '=') {
+            tokens.push(new Token(Type.ASSIGN, ':=', currentPos));
+            currentPos = currentPos + 2;
+            continue;
+        }
+
         //check the word length
         let wordLength = 1;
         let word = input[currentPos];
         while (currentPos + wordLength <= input.length) {
             //check if the word ends
-            if (input[currentPos + wordLength] === '(' || input[currentPos + wordLength] === ')' || input[currentPos + wordLength] === ' ' || currentPos+wordLength === input.length) {
+            const nextChar = input[currentPos + wordLength];
+            if (wordBreaks.includes(nextChar) || currentPos+wordLength === input.length) {
                 tokens.push(new Token(getType(word), word, currentPos));
                 currentPos += wordLength;
                 break;
@@ -51,9 +63,8 @@ function lex(input) {
             word += input[currentPos + wordLength];
             wordLength++;
         }
-
     }
-    tokens.push(new Token(Type.EOF, "<EOF>", input.length))
+    tokens.push(new Token(Type.EOL, "<EOL>", input.length))
     return tokens
 }
 

@@ -4,9 +4,9 @@
 import fs from 'fs';
 import readline from 'readline';
 import lex from './services/lexer.mjs';
-import {Parser} from './services/parser.mjs';
+import parse from "./services/parser.mjs";
 
-const filePath = 'demo-code.txt';
+const filePath = 'test.txt';
 
 // Create a readable stream from the file
 const fileStream = fs.createReadStream(filePath);
@@ -17,18 +17,15 @@ const rl = readline.createInterface({
     crlfDelay: Infinity // Recognize all instances of CR LF ('\r\n') as a single line break
 });
 
+const lexResult = [];
 // Event handler for each line
 rl.on('line', (line) => {
     console.log(`Line from file: ${line}`);
-    let lexResult = lex(line);
+    lexResult.push(...lex(line));
+});
+
+rl.on('close',  ()=> {
     console.log(`Lexing result: \n ${JSON.stringify(lexResult, null, 2)}`);
-    let parser = new Parser(lexResult);
-    let parseResult = parser.parse();
+    const parseResult = parse(lexResult);
     console.log(`Parsing result: \n ${JSON.stringify(parseResult, null, 2)}`);
-});
-
-// Event handler for the end of the file
-rl.on('close', () => {
-    console.log('File reading finished.');
-});
-
+})

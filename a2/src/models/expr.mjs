@@ -1,73 +1,78 @@
 class Expr {
-    constructor(apply, name, expr) {
-        this.apply = apply;
-        this.name = name;
+    expr;
+    basic;
+
+    constructor(expr, basic) {
         this.expr = expr;
-    }
-
-    static createApply(apply) {
-        return new Expr(apply, null, null);
-    }
-
-    static createNamed(name, expr) {
-        return new Expr(null, name, expr);
-    }
-}
-
-class Apply {
-    constructor(apply, basic) {
-        this.apply = apply;
         this.basic = basic;
     }
 
     static createBasic(basic) {
-        return new Apply(null, basic);
+        return new Expr(undefined, basic);
     }
-
-    static createApply(apply, basic) {
-        return new Apply(apply, basic);
+    static createExpression(expr, basic) {
+        return new Expr(expr, basic);
     }
 }
 
 class Basic {
-    constructor(number, name, expr, pairs) {
+    assignment;
+    value;
+
+    constructor(assignment, value) {
+        this.assignment = assignment;
+        this.value = value;
+    }
+
+    static createAssignment(assignment) {
+        return new Basic(assignment);
+    }
+    static createValue(value) {
+        return new Basic(undefined, value);
+    }
+}
+
+class Value {
+    number;
+    name;
+    functionCall;
+
+    constructor(number, name, functionCall) {
         this.number = number;
         this.name = name;
-        this.expr = expr;
-        this.pairs = pairs;
+        this.functionCall = functionCall;
     }
 
     static createNumber(number) {
-        return new Basic(number, null, null, null);
+        return new Value(number);
     }
 
     static createName(name) {
-        return new Basic(null, name, null, null);
+        return new Value(undefined, name);
     }
-
-    static createExpr(expr) {
-        return new Basic(null, null, expr, null);
-    }
-
-    static createPairs(pairs) {
-        return new Basic(null, null, null, pairs);
+    static createFunctionCall(functionCall) {
+        return new Value(undefined, undefined, functionCall);
     }
 }
 
-class Pairs {
-    constructor(pairs, name, expr) {
-        this.pairs = pairs;
+class FunctionCall {
+    name;
+    values;
+
+    constructor(name, values) {
+        this.name = name;
+        this.values = values;
+    }
+}
+
+class Assign {
+    name;
+    expr;
+
+    constructor(name, expr) {
         this.name = name;
         this.expr = expr;
     }
-
-    static createSinglePair(name, expr) {
-        return new Pairs(null, name, expr);
-    }
-
-    static createPairs(pairs, name, expr) {
-        return new Pairs(pairs, name, expr);
-    }
 }
 
-export { Expr, Apply, Basic, Pairs };
+export { Expr, Basic, Value, FunctionCall, Assign };
