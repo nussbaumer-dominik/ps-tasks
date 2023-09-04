@@ -42,7 +42,8 @@ function interpretExpression(expression) {
             if (result === undefined) {
                 const builtin = builtins[value.functionCall.name];
                 if (builtin) {
-                    builtin(interpretExpression(value.functionCall.values))
+                    const callValues = value.functionCall.values.map(interpretExpression)
+                    return builtin(callValues)
                 } else {
                     throw new Error(`Function ${value.functionCall.name} not found`)
                 }
@@ -61,7 +62,8 @@ function interpret(expressions) {
 
 const builtins = {
     "print": (value) => console.log(value),
-    "plus": (a, b) => a + b,
+    "plus": (values) => values[0] + values[1],
+    "mult": (values) => values[0] * values[1],
 }
 
 export default interpret;

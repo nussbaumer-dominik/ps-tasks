@@ -2,7 +2,7 @@ import {Token} from "../models/token.mjs";
 import {Type} from "../models/type.mjs";
 
 
-const wordBreaks = [' ', '(', ')', '{', '}']
+const wordBreaks = [' ', '(', ')', '{', '}', ',']
 
 function lex(input) {
     console.log(`lexing input: ${input}`);
@@ -42,6 +42,11 @@ function lex(input) {
             currentPos++;
             continue;
         }
+        if (char === ',') {
+            tokens.push(new Token(Type.COMMA, ',', currentPos));
+            currentPos++;
+            continue;
+        }
         //check for assignment :=
         if (char === ':' && currentPos + 1 < input.length  && input[currentPos + 1] === '=') {
             tokens.push(new Token(Type.ASSIGN, ':=', currentPos));
@@ -70,7 +75,7 @@ function lex(input) {
 
 function getType(word) {
     if (word === "plus" || word === "minus" || word === "mult" || word === "div" || word === "cond") {
-        return Type.OPERATION
+        return Type.ENTITY
     }
     //check if word is a number
     if (!isNaN(word)) {

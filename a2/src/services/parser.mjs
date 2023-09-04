@@ -29,6 +29,34 @@ function parseBasic(basicTokens) {
     return Basic.createValue(parseValue(basicTokens));
 }
 
+function parseFunctionCall(valueTokens) {
+    const name = valueTokens[0].text;
+    //check for expr
+    valueTokens.shift();
+    valueTokens.shift();
+    //check for closing parenthesis
+    let i = 0;
+    let curlyCount = 1;
+    while (curlyCount > 0) {
+        if (valueTokens[i].type === Type.RCURLY) {
+            curlyCount--;
+        }
+        if (valueTokens[i].type === Type.LCURLY) {
+            curlyCount++;
+        }
+        i++;
+    }
+    //split tokens at i
+    let exprTokens = valueTokens.splice(0, i - 1);
+    //remove closing parenthesis
+    valueTokens.shift();
+    return Value.createFunctionCall(new FunctionCall(name, parseValues(exprTokens)));
+}
+
+function isFunctioncall(valueTokens) {
+    return valueTokens[0].type === Type.ENTITY && valueTokens[1]?.type === Type.LCURLY;
+}
+
 function parseValue(valueTokens) {
     let basic = null;
     //check for number
@@ -36,35 +64,35 @@ function parseValue(valueTokens) {
         basic = Value.createNumber(valueTokens[0].text);
         valueTokens.shift();
     }
-    else if (valueTokens[0].type === Type.ENTITY  && valueTokens[1]?.type === Type.LCURLY) {
-        const name = valueTokens[0].text;
-        //check for expr
-        valueTokens.shift();
-        valueTokens.shift();
-        //check for closing parenthesis
-        let i = 0;
-        while (valueTokens[i].type !== Type.RCURLY) {
-            i++;
-        }
-        //split tokens at i
-        let exprTokens = valueTokens.splice(0, i);
-        //remove closing parenthesis
-        valueTokens.shift();
-        //TODO multiple
-        basic = Value.createFunctionCall(new FunctionCall(name, parseValue([exprTokens[0]])));
+    else if (isFunctioncall(valueTokens)) {
+        basic = parseFunctionCall(valueTokens);
     }  else if (valueTokens[0].type === Type.ENTITY || valueTokens[0].type === Type.OPERATION) {
         //check for name
         basic = Value.createName(valueTokens[0].text);
         valueTokens.shift();
     }else {
+        //TODO validation
         valueTokens.shift();
     }
-
-    //TODO: check for pairs
-    //TODO: add curly brackets to the tokens
-
     return basic;
+}
 
+
+function parseValues(valueTokens) {
+    const resultValues = [];
+    while (valueTokens.length > 0) {
+        const token = valueTokens[0];
+        const next = valueTokens[1];
+        if (isFunctioncall(valueTokens)) {
+            resultValues.push(parseFunctionCall(valueTokens));
+        } else
+        if ((token.type === Type.NUMBER || token.type === Type.ENTITY) && (next === undefined || next.type === Type.COMMA)) {
+            resultValues.push(parseValue([token]))
+            valueTokens.shift();
+            valueTokens.shift();
+        }
+    }
+    return resultValues;
 }
 
 export default parse;

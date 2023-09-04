@@ -9,6 +9,7 @@ const Type = {
     LPAREN: "left_parenthesis",
     RCURLY: "right_curly",
     LCURLY: "left_curly",
+    COMMA: "comma",
     EOL: "end_of_line",
     EOF: "end_of_file"
 }
