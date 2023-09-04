@@ -89,6 +89,12 @@ Here is an example programm that calculates the average of a list
         plus{len, 1}
    }}
    
+   calculate := (nr)=>{
+        plus{sum, nr}
+        plus{len, 1}
+   }
+   each{list, calculate}
+   
    avg := div{sum, len}
    
    print{avg}
