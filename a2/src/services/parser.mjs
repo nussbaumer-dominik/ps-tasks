@@ -13,51 +13,51 @@ function parse(tokens) {
     return result;
 }
 
-function parseBasic(exprTokens) {
+function parseBasic(basicTokens) {
     //check for lambda
-    if (exprTokens[0].type === Type.ENTITY && exprTokens.length > 1 && exprTokens[1].type === Type.ASSIGN) {
-        let name = exprTokens[0].text;
-        exprTokens.shift();
-        exprTokens.shift();
+    if (basicTokens[0].type === Type.ENTITY && basicTokens.length > 1 && basicTokens[1].type === Type.ASSIGN) {
+        let name = basicTokens[0].text;
+        basicTokens.shift();
+        basicTokens.shift();
         //TODO get scoped expression
-        const expression = [exprTokens[0]];
-        exprTokens.shift();
+        const expression = [basicTokens[0]];
+        basicTokens.shift();
         return Basic.createAssignment(new Assign(name, parseBasic(expression)));
     }
 
     //else check for apply
-    return Basic.createValue(parseValue(exprTokens));
+    return Basic.createValue(parseValue(basicTokens));
 }
 
-function parseValue(basicTokens) {
+function parseValue(valueTokens) {
     let basic = null;
     //check for number
-    if (basicTokens[0].type === Type.NUMBER) {
-        basic = Value.createNumber(basicTokens[0].text);
-        basicTokens.shift();
+    if (valueTokens[0].type === Type.NUMBER) {
+        basic = Value.createNumber(valueTokens[0].text);
+        valueTokens.shift();
     }
-    else if (basicTokens[0].type === Type.ENTITY  && basicTokens[1]?.type === Type.LCURLY) {
-        const name = basicTokens[0].text;
+    else if (valueTokens[0].type === Type.ENTITY  && valueTokens[1]?.type === Type.LCURLY) {
+        const name = valueTokens[0].text;
         //check for expr
-        basicTokens.shift();
-        basicTokens.shift();
+        valueTokens.shift();
+        valueTokens.shift();
         //check for closing parenthesis
-        let i = basicTokens.length - 1;
-        while (basicTokens[i].type !== Type.RCURLY) {
+        let i = valueTokens.length - 1;
+        while (valueTokens[i].type !== Type.RCURLY) {
             i--;
         }
         //split tokens at i
-        let exprTokens = basicTokens.splice(0, i);
+        let exprTokens = valueTokens.splice(0, i);
         //remove closing parenthesis
-        basicTokens.shift();
+        valueTokens.shift();
         //TODO multiple
         basic = new FunctionCall(name, parseValue([exprTokens[0]]));
-    }  else if (basicTokens[0].type === Type.ENTITY || basicTokens[0].type === Type.OPERATION) {
+    }  else if (valueTokens[0].type === Type.ENTITY || valueTokens[0].type === Type.OPERATION) {
         //check for name
-        basic = Value.createName(basicTokens[0].text);
-        basicTokens.shift();
+        basic = Value.createName(valueTokens[0].text);
+        valueTokens.shift();
     }else {
-        basicTokens.shift();
+        valueTokens.shift();
     }
 
     //TODO: check for pairs
