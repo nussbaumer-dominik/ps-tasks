@@ -32,7 +32,6 @@ library
       Syntax
       TextEditor
       TextView
-      Window
   other-modules:
       Paths_a3
   hs-source-dirs:
@@ -42,6 +41,7 @@ library
       base >=4.7 && <5
     , gi-gdk
     , gi-gtk
+    , gi-pango
     , haskell-gi
     , haskell-gi-base
     , regex-pcre
@@ -60,6 +60,7 @@ executable a3-exe
     , base >=4.7 && <5
     , gi-gdk
     , gi-gtk
+    , gi-pango
     , haskell-gi
     , haskell-gi-base
     , regex-pcre
@@ -79,6 +80,7 @@ test-suite a3-test
     , base >=4.7 && <5
     , gi-gdk
     , gi-gtk
+    , gi-pango
     , haskell-gi
     , haskell-gi-base
     , regex-pcre

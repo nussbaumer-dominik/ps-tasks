@@ -6,7 +6,7 @@ module TextEditor (openEditor) where
 import qualified GI.Gtk as Gtk
 import Data.GI.Base
 import Menu (createMenuBar)
-import TextView (createTextView)
+import TextView (createTextViewWithNumbers)
 
 openEditor :: Gtk.Window -> Gtk.Box -> Gtk.TextBuffer -> FilePath -> IO ()
 openEditor win grid textbuffer filename = do
@@ -15,7 +15,7 @@ openEditor win grid textbuffer filename = do
     Gtk.widgetSetVexpand menubar False
     Gtk.widgetSetValign menubar Gtk.AlignStart
 
-    textview <- createTextView textbuffer filename
+    textview <- createTextViewWithNumbers textbuffer
     scrolledWindow <- new Gtk.ScrolledWindow []
     Gtk.containerAdd scrolledWindow textview
     Gtk.containerAdd grid scrolledWindow
