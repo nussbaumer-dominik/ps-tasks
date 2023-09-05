@@ -8,7 +8,7 @@ import parse from "./services/parser.mjs";
 import interpret from "./services/interpreter.mjs";
 
 //const filePath = 'demo-code.txt';
-const filePath = 'test.txt';
+const filePath = 'loop.txt';
 
 // Create a readable stream from the file
 const fileStream = fs.createReadStream(filePath);
