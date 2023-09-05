@@ -11,6 +11,27 @@ packages:
       size: 359
   original:
     hackage: gi-gtk-3.0.41
+- completed:
+    hackage: megaparsec-9.4.1@sha256:200835a92db40df881db55f6f95b25b7d41ecd762c1d7479dcff9dea0f09b782,3219
+    pantry-tree:
+      sha256: 953b6e9f385273d8b43115a2c7fc21ba9efc512fff55a22a2c55db42dd1559cd
+      size: 1591
+  original:
+    hackage: megaparsec-9.4.1
+- completed:
+    hackage: void-0.7.3@sha256:13d30f62fcdf065e595d679d4ac8b4b0c1bb1a1b73db7b5b5a8f857cb5c8a546,1857
+    pantry-tree:
+      sha256: 5730b45e857424c97d24ee1cf530be1fc782cd000221ac97b5568be886cbbc2b
+      size: 584
+  original:
+    hackage: void-0.7.3
+- completed:
+    hackage: gi-pango-1.0.29@sha256:0c8bfd18a0fc106c66524d5f8df9d3bbdf6f6164665274d867502a48e019081e,7469
+    pantry-tree:
+      sha256: 7747d0ab15aff8e3efb6417aafe3708dd864a8654b40bbe5bc7f13af8131a8ba
+      size: 361
+  original:
+    hackage: gi-pango-1.0.29
 snapshots:
 - completed:
     sha256: 97710f56bf093fca0ee5d8dbe19d96b654c752e405b66795b4baedd84a794c60

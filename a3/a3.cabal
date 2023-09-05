@@ -27,7 +27,9 @@ library
   exposed-modules:
       FileHandler
       FileOpener
+      Highlighting
       Menu
+      Syntax
       TextEditor
       TextView
       Window
@@ -39,8 +41,10 @@ library
   build-depends:
       base >=4.7 && <5
     , gi-gtk
+    , gi-pango
     , haskell-gi
     , haskell-gi-base
+    , megaparsec
     , text
   default-language: Haskell2010
 
@@ -55,8 +59,10 @@ executable a3-exe
       a3
     , base >=4.7 && <5
     , gi-gtk
+    , gi-pango
     , haskell-gi
     , haskell-gi-base
+    , megaparsec
     , text
   default-language: Haskell2010
 
@@ -72,7 +78,9 @@ test-suite a3-test
       a3
     , base >=4.7 && <5
     , gi-gtk
+    , gi-pango
     , haskell-gi
     , haskell-gi-base
+    , megaparsec
     , text
   default-language: Haskell2010

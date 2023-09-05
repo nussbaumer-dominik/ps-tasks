@@ -25,6 +25,8 @@ dependencies:
 - haskell-gi
 - haskell-gi-base
 - text
+- megaparsec
+- gi-pango
 
 ghc-options:
 - -Wall
