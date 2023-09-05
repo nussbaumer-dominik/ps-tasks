@@ -99,6 +99,7 @@ const builtins = {
         return null;
     },
     "plus": (values) => values[0] + values[1],
+    "minus": (values) => values[0] - values[1],
     "mult": (values) => values[0] * values[1],
     "div": (values) => values[0] / values[1],
     "modulo": (values) => values[0] % values[1],
@@ -121,7 +122,13 @@ const builtins = {
         } else {
             return values[2];
         }
-    }
+    },
+    "eq": (values) => values[0] === values[1] ? 1 : 0,
+    "lt": (values) => values[0] < values[1] ? 1 : 0,
+    "gt": (values) => values[0] > values[1] ? 1 : 0,
+    "and": (values) => values[0] === 1 && values[1] === 1 ? 1 : 0,
+    "or": (values) => values[0] === 1 || values[1] === 1 ? 1 : 0,
+    "not": (value) => value === 0 ? 1 : 0,
 }
 
 export default interpret;
