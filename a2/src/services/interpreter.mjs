@@ -55,6 +55,9 @@ function interpretExpression(expression, eager = false) {
             if (result === undefined) {
                 const builtin = builtins[value.functionCall.name];
                 if (builtin) {
+                    if(value.functionCall.name === "cond"){
+                        return builtin(value.functionCall.values);
+                    }
                     const callValues = value.functionCall.values.map(interpretExpression)
                     return builtin(callValues)
                 } else {
@@ -116,11 +119,11 @@ const builtins = {
         })
     },
     "cond": (values) => {
-        const logicResult = values[0]
+        const logicResult =  interpretExpression(values[0], true)
         if (logicResult === 1) {
-            return values[1];
+            return interpretExpression(values[1], true)
         } else {
-            return values[2];
+            return interpretExpression(values[2], true)
         }
     },
     "eq": (values) => values[0] === values[1] ? 1 : 0,

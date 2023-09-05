@@ -1,0 +1,16 @@
+
+start := 0
+end := 10
+
+inc := () => {
+    i := plus{i, 1}
+}
+
+i := start
+step := () => {
+  print{i}
+  inc{}
+  cond{lt{i, end}, step{}, 0}
+}
+
+step{}
