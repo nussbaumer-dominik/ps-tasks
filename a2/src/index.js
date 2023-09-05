@@ -7,7 +7,7 @@ import lex from './services/lexer.mjs';
 import parse from "./services/parser.mjs";
 import interpret from "./services/interpreter.mjs";
 
-const filePath = 'test.txt';
+const filePath = 'demo-code.txt';
 
 // Create a readable stream from the file
 const fileStream = fs.createReadStream(filePath);

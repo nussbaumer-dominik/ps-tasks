@@ -2,7 +2,7 @@ import {Token} from "../models/token.mjs";
 import {Type} from "../models/type.mjs";
 
 
-const wordBreaks = [' ', '(', ')', '{', '}', ',']
+const wordBreaks = [' ', '(', ')', '{', '}', ',', '[', ']', ':', '=', '>', '<', '+', '-', '*', '/', '%'];
 
 function lex(input) {
     console.log(`lexing input: ${input}`);
@@ -15,7 +15,6 @@ function lex(input) {
     let currentPos = 0;
 
     while (currentPos < input.length) {
-        console.log(`currentPos: ${currentPos}, ${input[currentPos]}`);
         let char = input[currentPos];
         //skip whitespace
         if (char === ' ') {
@@ -39,6 +38,16 @@ function lex(input) {
         }
         if (char === '}') {
             tokens.push(new Token(Type.RCURLY, '}', currentPos));
+            currentPos++;
+            continue;
+        }
+        if (char === '[') {
+            tokens.push(new Token(Type.LSQUARE, '[', currentPos));
+            currentPos++;
+            continue;
+        }
+        if (char === ']') {
+            tokens.push(new Token(Type.RSQUARE, ']', currentPos));
             currentPos++;
             continue;
         }

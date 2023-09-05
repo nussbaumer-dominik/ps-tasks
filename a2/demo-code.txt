@@ -1,1 +1,3 @@
-(x -> y -> add (mult x x) y) 2 3
+foo := 1
+list := [1, foo, (nr) => { nr := plus{nr, 1} }, 4]
+

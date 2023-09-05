@@ -10,6 +10,7 @@ class Expr {
     static createBasic(basic) {
         return new Expr(undefined, basic);
     }
+
     static createExpression(expr, basic) {
         return new Expr(expr, basic);
     }
@@ -27,6 +28,7 @@ class Basic {
     static createAssignment(assignment) {
         return new Basic(assignment);
     }
+
     static createValue(value) {
         return new Basic(undefined, value);
     }
@@ -35,12 +37,14 @@ class Basic {
 class Value {
     number;
     name;
+    list
     functionCall;
     functionDefinition;
 
-    constructor(number, name, functionCall, functionDefinition) {
+    constructor(number, name, list, functionCall, functionDefinition) {
         this.number = number;
         this.name = name;
+        this.list = list;
         this.functionCall = functionCall;
         this.functionDefinition = functionDefinition;
     }
@@ -53,11 +57,17 @@ class Value {
     static createName(name) {
         return new Value(undefined, name);
     }
-    static createFunctionCall(functionCall) {
-        return new Value(undefined, undefined, functionCall);
+
+    static createList(list) {
+        return new Value(undefined, undefined, list);
     }
+
+    static createFunctionCall(functionCall) {
+        return new Value(undefined, undefined, undefined, functionCall);
+    }
+
     static createFunctionDefinition(functionDefinition) {
-        return new Value(undefined, undefined, undefined, functionDefinition);
+        return new Value(undefined, undefined, undefined, undefined, functionDefinition);
     }
 }
 
@@ -92,4 +102,4 @@ class Assign {
     }
 }
 
-export { Expr, Basic, Value, FunctionCall, FunctionDefinition, Assign };
+export {Expr, Basic, Value, FunctionCall, FunctionDefinition, Assign};

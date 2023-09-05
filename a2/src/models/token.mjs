@@ -6,4 +6,4 @@ class Token {
     }
 }
 
-export { Token };
+export {Token};

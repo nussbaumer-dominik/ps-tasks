@@ -9,6 +9,8 @@ const Type = {
     LPAREN: "left_parenthesis",
     RCURLY: "right_curly",
     LCURLY: "left_curly",
+    LSQUARE: "left_square",
+    RSQUARE: "right_square",
     COMMA: "comma",
     EOL: "end_of_line",
     EOF: "end_of_file"

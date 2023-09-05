@@ -20,16 +20,27 @@ function parseBasic(basicTokens) {
         basicTokens.shift();
         basicTokens.shift();
 
-        const minExpressionEndIndex = basicTokens.findIndex(t => t.type === Type.EOL)
+        let minExpressionEndIndex = basicTokens.findIndex(t => t.type === Type.EOL)
+        if (minExpressionEndIndex === -1) {
+            minExpressionEndIndex = basicTokens.length -1;
+        }
         let openParenthesis = 0;
         for (let i = 0; i < minExpressionEndIndex; i++) {
-            if(basicTokens[i].type === Type.LCURLY) {openParenthesis++}
-            if(basicTokens[i].type === Type.RCURLY) {openParenthesis--}
+            if (basicTokens[i].type === Type.LCURLY) {
+                openParenthesis++
+            }
+            if (basicTokens[i].type === Type.RCURLY) {
+                openParenthesis--
+            }
         }
         let endIndex = minExpressionEndIndex;
-        while(openParenthesis > 0) {
-            if(basicTokens[endIndex].type === Type.LCURLY) {openParenthesis++}
-            if(basicTokens[endIndex].type === Type.RCURLY) {openParenthesis--}
+        while (openParenthesis > 0) {
+            if (basicTokens[endIndex].type === Type.LCURLY) {
+                openParenthesis++
+            }
+            if (basicTokens[endIndex].type === Type.RCURLY) {
+                openParenthesis--
+            }
             endIndex++;
         }
 
@@ -114,17 +125,17 @@ function parseValue(valueTokens) {
     if (valueTokens[0].type === Type.NUMBER) {
         basic = Value.createNumber(valueTokens[0].text);
         valueTokens.shift();
-    }
-    else if (isFunctionDefinition(valueTokens)) {
+    } else if (isFunctionDefinition(valueTokens)) {
         basic = parseFunctionDefinition(valueTokens);
-    }
-    else if (isFunctionCall(valueTokens)) {
+    } else if (isFunctionCall(valueTokens)) {
         basic = parseFunctionCall(valueTokens);
-    }  else if (valueTokens[0].type === Type.ENTITY || valueTokens[0].type === Type.OPERATION) {
+    } else if (valueTokens[0].type === Type.LSQUARE) {
+        basic = Value.createList(parseList(valueTokens));
+    } else if (valueTokens[0].type === Type.ENTITY || valueTokens[0].type === Type.OPERATION) {
         //check for name
         basic = Value.createName(valueTokens[0].text);
         valueTokens.shift();
-    }else {
+    } else {
         //TODO validation
         valueTokens.shift();
     }
@@ -139,14 +150,28 @@ function parseValues(valueTokens) {
         const next = valueTokens[1];
         if (isFunctionCall(valueTokens)) {
             resultValues.push(parseFunctionCall(valueTokens));
-        } else
-        if ((token.type === Type.NUMBER || token.type === Type.ENTITY) && (next === undefined || next.type === Type.COMMA)) {
+        } else if ((token.type === Type.NUMBER || token.type === Type.ENTITY) && (next === undefined || next.type === Type.COMMA || next.type === Type.RSQUARE)) {
             resultValues.push(parseValue([token]))
             valueTokens.shift();
             valueTokens.shift();
         }
     }
     return resultValues;
+}
+
+function parseList(listTokens) {
+    //check for opening square bracket
+    listTokens.shift();
+    const values = [];
+    while (listTokens[0].type !== Type.RSQUARE) {
+        if (listTokens[0].type === Type.COMMA) {
+            listTokens.shift();
+            continue;
+        }
+        values.push(parseValue(listTokens));
+    }
+    listTokens.shift(); // [
+    return values;
 }
 
 export default parse;

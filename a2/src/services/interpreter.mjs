@@ -3,11 +3,11 @@ import {Basic, Value} from "../models/expr.mjs";
 const memory = new Map()
 
 function findResult(name) {
-    if(!memory.has(name)){
+    if (!memory.has(name)) {
         return undefined;
     }
     const entry = memory.get(name);
-    if(entry.value) {
+    if (entry.value) {
         return entry.value;
     }
     return interpretExpression(entry.expression);
@@ -19,18 +19,18 @@ function interpretExpression(expression, eager = false) {
         value = expression.value;
         assignment = expression.assignment;
     }
-    if(expression instanceof Value) {
+    if (expression instanceof Value) {
         value = expression;
     }
 
 
     if (assignment) {
-        if(eager) {
+        if (eager) {
             memory.set(assignment.name, {
                 expression: assignment.expr,
                 value: interpretExpression((assignment.expr))
             })
-        }else {
+        } else {
             memory.set(assignment.name, {
                 expression: assignment.expr,
                 value: undefined,
@@ -71,7 +71,7 @@ function interpretExpression(expression, eager = false) {
                     interpretExpression(expression, true)
                 }
                 for (let i = 0; i < names.length; i++) {
-                    if(values[i].name) {
+                    if (values[i].name) {
                         memory.set(values[i].name, memory.get(names[i]));
                     }
                 }
@@ -84,7 +84,7 @@ function interpretExpression(expression, eager = false) {
 function interpret(expressions) {
     for (let expression of expressions) {
         const result = interpretExpression(expression);
-        if(!isNaN(result)){
+        if (!isNaN(result)) {
             console.log(result);
         }
     }
