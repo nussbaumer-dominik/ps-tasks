@@ -11,4 +11,3 @@ inc := (nr) => {
 inc{foo}
 inc{foo}
 foo
-bar

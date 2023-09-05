@@ -55,23 +55,8 @@ function parseBasic(basicTokens) {
 
 function parseFunctionCall(valueTokens) {
     const name = valueTokens[0].text;
-    //check for expr
-    valueTokens.shift();
-    valueTokens.shift();
-    //check for closing parenthesis
-    let i = 0;
-    let curlyCount = 1;
-    while (curlyCount > 0) {
-        if (valueTokens[i].type === Type.RCURLY) {
-            curlyCount--;
-        }
-        if (valueTokens[i].type === Type.LCURLY) {
-            curlyCount++;
-        }
-        i++;
-    }
-    //split tokens at i
-    let exprTokens = valueTokens.splice(0, i - 1);
+
+    let exprTokens = parseExpression(valueTokens);
     //remove closing parenthesis
     valueTokens.shift();
     return Value.createFunctionCall(new FunctionCall(name, parseValues(exprTokens)));
@@ -83,6 +68,25 @@ function isFunctionCall(valueTokens) {
 
 function isFunctionDefinition(valueTokens) {
     return valueTokens[0].type === Type.LPAREN;
+}
+
+function parseExpression(valueTokens) {
+    valueTokens.shift(); // =>
+    valueTokens.shift(); // {
+    let i = 0;
+    let curlyCount = 1;
+    //check for closing parenthesis
+    while (curlyCount > 0) {
+        if (valueTokens[i].type === Type.RCURLY) {
+            curlyCount--;
+        }
+        if (valueTokens[i].type === Type.LCURLY) {
+            curlyCount++;
+        }
+        i++;
+    }
+    //split tokens at i
+    return valueTokens.splice(0, i - 1);
 }
 
 function parseFunctionDefinition(valueTokens) {
@@ -99,20 +103,7 @@ function parseFunctionDefinition(valueTokens) {
     valueTokens.shift();
 
     // Parse function body
-    valueTokens.shift(); // =>
-    valueTokens.shift(); // {
-    let i = 0;
-    let curlyCount = 1;
-    while (curlyCount > 0) {
-        if (valueTokens[i].type === Type.RCURLY) {
-            curlyCount--;
-        }
-        if (valueTokens[i].type === Type.LCURLY) {
-            curlyCount++;
-        }
-        i++;
-    }
-    let exprTokens = valueTokens.splice(0, i - 1);
+    let exprTokens = parseExpression(valueTokens);
     const expressions = parse(exprTokens);
     //remove closing parenthesis
     valueTokens.shift(); // }
