@@ -12,6 +12,13 @@ packages:
   original:
     hackage: gi-gtk-3.0.41
 - completed:
+    hackage: haskell-gi-0.26.7@sha256:c9e3b135220899034d05e9cd67395f9aead797753a596b4f5298ff734a1837d9,5184
+    pantry-tree:
+      sha256: 3c306da3dcf5a2e1684f905cd468c660df9ff06e4c88c2a3ac2aeac9fbd74161
+      size: 4270
+  original:
+    hackage: haskell-gi-0.26.7
+- completed:
     hackage: megaparsec-9.4.1@sha256:200835a92db40df881db55f6f95b25b7d41ecd762c1d7479dcff9dea0f09b782,3219
     pantry-tree:
       sha256: 953b6e9f385273d8b43115a2c7fc21ba9efc512fff55a22a2c55db42dd1559cd
@@ -32,6 +39,13 @@ packages:
       size: 361
   original:
     hackage: gi-pango-1.0.29
+- completed:
+    hackage: gi-gdk-3.0.28@sha256:744de92384ab26932c205b6a6bcd5f3f5a89ebbb222d5a1d5bdd52a4cf21ece2,8991
+    pantry-tree:
+      sha256: b26caf13ab102ecabc4c64fb05d73b0f07be49a48cdd5ed89788adfed3c783b0
+      size: 356
+  original:
+    hackage: gi-gdk-3.0.28
 snapshots:
 - completed:
     sha256: 97710f56bf093fca0ee5d8dbe19d96b654c752e405b66795b4baedd84a794c60
