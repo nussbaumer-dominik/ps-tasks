@@ -1,0 +1,16 @@
+v := 100
+
+list := [1, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 12, v]
+   
+sum := 0
+len := 0
+
+calculate := (nr)=>{
+    sum := plus{sum, nr}
+    len := plus{len, 1}
+}
+
+each{list, calculate}
+
+avg := div{sum, len}
+avg

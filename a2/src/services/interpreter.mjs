@@ -28,7 +28,7 @@ function interpretExpression(expression, eager = false) {
         if (eager) {
             memory.set(assignment.name, {
                 expression: assignment.expr,
-                value: interpretExpression((assignment.expr))
+                value: interpretExpression((assignment.expr), eager)
             })
         } else {
             memory.set(assignment.name, {
@@ -38,8 +38,11 @@ function interpretExpression(expression, eager = false) {
         }
     }
     if (value) {
-        if (value.number) {
+        if (value.number !== undefined) {
             return value.number
+        }
+        if (value.list) {
+            return value.list.map(entry => interpretExpression(entry, eager))
         }
         if (value.name) {
             return findResult(value.name)
@@ -96,6 +99,18 @@ const builtins = {
     "mult": (values) => values[0] * values[1],
     "div": (values) => values[0] / values[1],
     "modulo": (values) => values[0] % values[1],
+    "each": (values) => {
+        values[0].forEach(value => {
+            memory.set(values[1].names[0], {
+                expression: undefined,
+                value: value,
+            });
+
+            for (let expression of values[1].expressions) {
+                interpretExpression(expression, true)
+            }
+        })
+    },
 }
 
 export default interpret;

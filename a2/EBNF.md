@@ -15,8 +15,8 @@
     | <values> ’,’ <value>   
 <value> ::= <integer>
     | <name>
-    | ’[’ <values> ’]’
     | <functionCall>
+    | ’[’ <values> ’]’
     | <functionDefinition>
     
 <functionCall> ::= <name>'{'<values>'}'
