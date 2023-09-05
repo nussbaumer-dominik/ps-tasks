@@ -79,7 +79,7 @@ There are a variety of predefined functions:
 Here is an example programm that calculates the average of a list
 
 ```
-   list := [1, 1, 1 2, 2, 3, 3, 4, 5, 6, 7, 8, 9]
+   list := [1, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9]
    
    sum := 0
    len := 0

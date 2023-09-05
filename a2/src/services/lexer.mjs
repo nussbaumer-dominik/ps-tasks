@@ -80,7 +80,7 @@ function lex(input) {
 }
 
 function getType(word) {
-    if (word === "plus" || word === "minus" || word === "mult" || word === "div" || word === "cond") {
+    if (word === "plus" || word === "minus" || word === "mult" || word === "div" || word === "modulo" || word === "cond") {
         return Type.ENTITY
     }
     //check if word is a number

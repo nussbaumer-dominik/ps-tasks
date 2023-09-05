@@ -66,7 +66,7 @@ function parseFunctionCall(valueTokens) {
     return Value.createFunctionCall(new FunctionCall(name, parseValues(exprTokens)));
 }
 
-function isFunctioncall(valueTokens) {
+function isFunctionCall(valueTokens) {
     return valueTokens[0].type === Type.ENTITY && valueTokens[1]?.type === Type.LCURLY;
 }
 
@@ -118,7 +118,7 @@ function parseValue(valueTokens) {
     else if (isFunctionDefinition(valueTokens)) {
         basic = parseFunctionDefinition(valueTokens);
     }
-    else if (isFunctioncall(valueTokens)) {
+    else if (isFunctionCall(valueTokens)) {
         basic = parseFunctionCall(valueTokens);
     }  else if (valueTokens[0].type === Type.ENTITY || valueTokens[0].type === Type.OPERATION) {
         //check for name
@@ -137,7 +137,7 @@ function parseValues(valueTokens) {
     while (valueTokens.length > 0) {
         const token = valueTokens[0];
         const next = valueTokens[1];
-        if (isFunctioncall(valueTokens)) {
+        if (isFunctionCall(valueTokens)) {
             resultValues.push(parseFunctionCall(valueTokens));
         } else
         if ((token.type === Type.NUMBER || token.type === Type.ENTITY) && (next === undefined || next.type === Type.COMMA)) {

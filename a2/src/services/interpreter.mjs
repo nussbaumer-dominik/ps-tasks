@@ -94,6 +94,8 @@ const builtins = {
     "print": (value) => console.log(value),
     "plus": (values) => values[0] + values[1],
     "mult": (values) => values[0] * values[1],
+    "div": (values) => values[0] / values[1],
+    "modulo": (values) => values[0] % values[1],
 }
 
 export default interpret;
