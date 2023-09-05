@@ -1,5 +1,5 @@
 import {Type} from "../models/type.mjs";
-import {Expr, Basic, Value, FunctionCall, Assign} from "../models/expr.mjs";
+import {Expr, Basic, Value, FunctionCall, Assign, FunctionDefinition} from "../models/expr.mjs";
 
 function parse(tokens) {
     const result = [];
@@ -19,8 +19,21 @@ function parseBasic(basicTokens) {
         let name = basicTokens[0].text;
         basicTokens.shift();
         basicTokens.shift();
-        //TODO get scoped expression
-        const expression = [basicTokens[0]];
+
+        const minExpressionEndIndex = basicTokens.findIndex(t => t.type === Type.EOL)
+        let openParenthesis = 0;
+        for (let i = 0; i < minExpressionEndIndex; i++) {
+            if(basicTokens[i].type === Type.LCURLY) {openParenthesis++}
+            if(basicTokens[i].type === Type.RCURLY) {openParenthesis--}
+        }
+        let endIndex = minExpressionEndIndex;
+        while(openParenthesis > 0) {
+            if(basicTokens[endIndex].type === Type.LCURLY) {openParenthesis++}
+            if(basicTokens[endIndex].type === Type.RCURLY) {openParenthesis--}
+            endIndex++;
+        }
+
+        const expression = basicTokens.splice(0, endIndex);
         basicTokens.shift();
         return Basic.createAssignment(new Assign(name, parseBasic(expression)));
     }
@@ -57,12 +70,53 @@ function isFunctioncall(valueTokens) {
     return valueTokens[0].type === Type.ENTITY && valueTokens[1]?.type === Type.LCURLY;
 }
 
+function isFunctionDefinition(valueTokens) {
+    return valueTokens[0].type === Type.LPAREN;
+}
+
+function parseFunctionDefinition(valueTokens) {
+    // Parse names
+    valueTokens.shift(); // (
+    //check for closing parenthesis
+    const names = [];
+    while (valueTokens[0].type !== Type.RPAREN) {
+        if (valueTokens[0].type === Type.ENTITY) {
+            names.push(valueTokens[0].text)
+        }
+        valueTokens.shift();
+    }
+    valueTokens.shift();
+
+    // Parse function body
+    valueTokens.shift(); // =>
+    valueTokens.shift(); // {
+    let i = 0;
+    let curlyCount = 1;
+    while (curlyCount > 0) {
+        if (valueTokens[i].type === Type.RCURLY) {
+            curlyCount--;
+        }
+        if (valueTokens[i].type === Type.LCURLY) {
+            curlyCount++;
+        }
+        i++;
+    }
+    let exprTokens = valueTokens.splice(0, i - 1);
+    const expressions = parse(exprTokens);
+    //remove closing parenthesis
+    valueTokens.shift(); // }
+    return Value.createFunctionDefinition(new FunctionDefinition(names, expressions));
+}
+
 function parseValue(valueTokens) {
     let basic = null;
     //check for number
     if (valueTokens[0].type === Type.NUMBER) {
         basic = Value.createNumber(valueTokens[0].text);
         valueTokens.shift();
+    }
+    else if (isFunctionDefinition(valueTokens)) {
+        basic = parseFunctionDefinition(valueTokens);
     }
     else if (isFunctioncall(valueTokens)) {
         basic = parseFunctionCall(valueTokens);

@@ -53,6 +53,12 @@ function lex(input) {
             currentPos = currentPos + 2;
             continue;
         }
+        //check for function lambda =>
+        if (char === '=' && currentPos + 1 < input.length  && input[currentPos + 1] === '>') {
+            tokens.push(new Token(Type.LAMBDA, '=>', currentPos));
+            currentPos = currentPos + 2;
+            continue;
+        }
 
         //check the word length
         let wordLength = 1;

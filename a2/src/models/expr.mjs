@@ -36,11 +36,13 @@ class Value {
     number;
     name;
     functionCall;
+    functionDefinition;
 
-    constructor(number, name, functionCall) {
+    constructor(number, name, functionCall, functionDefinition) {
         this.number = number;
         this.name = name;
         this.functionCall = functionCall;
+        this.functionDefinition = functionDefinition;
     }
 
     static createNumber(number) {
@@ -54,6 +56,9 @@ class Value {
     static createFunctionCall(functionCall) {
         return new Value(undefined, undefined, functionCall);
     }
+    static createFunctionDefinition(functionDefinition) {
+        return new Value(undefined, undefined, undefined, functionDefinition);
+    }
 }
 
 class FunctionCall {
@@ -66,6 +71,17 @@ class FunctionCall {
     }
 }
 
+class FunctionDefinition {
+    names;
+    expressions;
+
+    constructor(names, expressions) {
+        this.names = names;
+        this.expressions = expressions;
+    }
+}
+
+
 class Assign {
     name;
     expr;
@@ -76,4 +92,4 @@ class Assign {
     }
 }
 
-export { Expr, Basic, Value, FunctionCall, Assign };
+export { Expr, Basic, Value, FunctionCall, FunctionDefinition, Assign };

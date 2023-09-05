@@ -4,6 +4,7 @@
 
 <basic> ::= <value>
     | <assignment>
+    | <EOL>
 
 <assignment> ::= <name> `:=` <expr><EOL>
 

@@ -13,7 +13,7 @@ function findResult(name) {
     return interpretExpression(entry.expression);
 }
 
-function interpretExpression(expression) {
+function interpretExpression(expression, eager = false) {
     let value, assignment = undefined;
     if (expression instanceof Basic) {
         value = expression.value;
@@ -25,10 +25,17 @@ function interpretExpression(expression) {
 
 
     if (assignment) {
-        memory.set(assignment.name, {
-            expression: assignment.expr,
-            value: undefined,
-        })
+        if(eager) {
+            memory.set(assignment.name, {
+                expression: assignment.expr,
+                value: interpretExpression((assignment.expr))
+            })
+        }else {
+            memory.set(assignment.name, {
+                expression: assignment.expr,
+                value: undefined,
+            })
+        }
     }
     if (value) {
         if (value.number) {
@@ -36,6 +43,9 @@ function interpretExpression(expression) {
         }
         if (value.name) {
             return findResult(value.name)
+        }
+        if (value.functionDefinition) {
+            return value.functionDefinition;
         }
         if (value.functionCall) {
             const result = findResult(value.functionCall.name)
@@ -48,6 +58,23 @@ function interpretExpression(expression) {
                     throw new Error(`Function ${value.functionCall.name} not found`)
                 }
             } else {
+                const names = result.names;
+                const values = value.functionCall.values;
+                const expressions = result.expressions;
+                for (let i = 0; i < names.length; i++) {
+                    memory.set(names[i], {
+                        expression: values[i],
+                        value: undefined,
+                    });
+                }
+                for (let expression of expressions) {
+                    interpretExpression(expression, true)
+                }
+                for (let i = 0; i < names.length; i++) {
+                    if(values[i].name) {
+                        memory.set(values[i].name, memory.get(names[i]));
+                    }
+                }
                 return result
             }
         }
@@ -56,7 +83,10 @@ function interpretExpression(expression) {
 
 function interpret(expressions) {
     for (let expression of expressions) {
-        console.log(interpretExpression(expression));
+        const result = interpretExpression(expression);
+        if(!isNaN(result)){
+            console.log(result);
+        }
     }
 }
 

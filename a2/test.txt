@@ -1,3 +1,13 @@
 foo := 1
 bar := foo
-plus{bar, mult{2, 3}}
+
+baz := plus{bar, mult{2, 3}}
+baz
+
+inc := (nr) => {
+    nr := plus{nr, 1}
+}
+
+inc{foo}
+inc{foo}
+foo
