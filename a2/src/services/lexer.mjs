@@ -5,7 +5,6 @@ import {Type} from "../models/type.mjs";
 const wordBreaks = [' ', '(', ')', '{', '}', ',', '[', ']', ':', '=', '>', '<', '+', '-', '*', '/', '%'];
 
 function lex(input) {
-    console.log(`lexing input: ${input}`);
     if (input === undefined) {
         return [];
     }

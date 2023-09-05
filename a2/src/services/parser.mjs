@@ -144,8 +144,8 @@ function parseValues(valueTokens) {
         } else if ((token.type === Type.NUMBER || token.type === Type.ENTITY) && (next === undefined || next.type === Type.COMMA || next.type === Type.RSQUARE)) {
             resultValues.push(parseValue([token]))
             valueTokens.shift();
-            valueTokens.shift();
         }
+        valueTokens.shift();
     }
     return resultValues;
 }

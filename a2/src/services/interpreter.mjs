@@ -94,7 +94,10 @@ function interpret(expressions) {
 }
 
 const builtins = {
-    "print": (value) => console.log(value),
+    "print": (value) => {
+        console.log(value)
+        return null;
+    },
     "plus": (values) => values[0] + values[1],
     "mult": (values) => values[0] * values[1],
     "div": (values) => values[0] / values[1],
@@ -111,6 +114,14 @@ const builtins = {
             }
         })
     },
+    "cond": (values) => {
+        const logicResult = values[0]
+        if (logicResult === 1) {
+            return values[1];
+        } else {
+            return values[2];
+        }
+    }
 }
 
 export default interpret;

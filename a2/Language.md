@@ -66,6 +66,15 @@ There are a variety of predefined functions:
    div{a, b}  # a / b
    modulo{a, b}  # a % b
    print{a}
+   
+   eq{1, 2} ==> 0
+   gt
+   lt
+   or
+   and{1, 1} ==> 1
+   not
+   cond{logic, expr, expr}
+   
     
    # Input always has to evaluate to List of int and an function taking an int as input
   each{list, function}

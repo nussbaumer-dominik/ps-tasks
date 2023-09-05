@@ -22,14 +22,14 @@ const rl = readline.createInterface({
 const lexResult = [];
 // Event handler for each line
 rl.on('line', (line) => {
-    console.log(`Line from file: ${line}`);
+    // console.log(`Line from file: ${line}`);
     lexResult.push(...lex(line));
 });
 
 rl.on('close',  ()=> {
-    console.log(`Lexing result: \n ${JSON.stringify(lexResult, null, 2)}`);
+    // console.log(`Lexing result: \n ${JSON.stringify(lexResult, null, 2)}`);
     const parseResult = parse(lexResult);
-    console.log(`Parsing result: \n ${JSON.stringify(parseResult, null, 2)}`);
+    // console.log(`Parsing result: \n ${JSON.stringify(parseResult, null, 2)}`);
 
     interpret(parseResult)
 })
