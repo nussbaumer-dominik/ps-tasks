@@ -16,6 +16,7 @@ import Syntax
 highlightSyntax :: Gtk.TextBuffer -> IO ()
 highlightSyntax textBuffer = do
     putStrLn "highlightSyntax"
+    removeHighlighting textBuffer
 
     startIter <- #getStartIter textBuffer
     endIter <- #getEndIter textBuffer
@@ -34,6 +35,17 @@ highlightSyntax textBuffer = do
                 Gtk.textBufferApplyTag textBuffer tag sIter eIter
             Nothing -> return ()
     return ()
+
+getBufferBounds :: Gtk.TextBuffer -> IO (Gtk.TextIter, Gtk.TextIter)
+getBufferBounds buffer = do
+    startIter <- Gtk.textBufferGetStartIter buffer
+    endIter <- Gtk.textBufferGetEndIter buffer
+    return (startIter, endIter)
+
+removeHighlighting :: Gtk.TextBuffer -> IO ()
+removeHighlighting buffer = do
+    (startIter, endIter) <- getBufferBounds buffer
+    Gtk.textBufferRemoveAllTags buffer startIter endIter
 
 highlightWordOccurrences :: Gtk.TextBuffer -> T.Text -> IO ()
 highlightWordOccurrences textBuffer word = do
