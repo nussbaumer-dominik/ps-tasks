@@ -6,8 +6,13 @@ module TextView (createTextViewWithNumbers, saveFile) where
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import qualified GI.Gtk as Gtk
-import Control.Monad (when)
-import Highlighting (highlightSyntax, highlightWordOccurrences, highlightMatchingBracket)
+import Control.Monad (when, unless)
+import Data.Char (isLetter, isDigit)
+import Highlighting ( highlightSyntax
+                    , highlightWordOccurrences
+                    , highlightMatchingBracket
+                    , isBracket
+                    )
 
 -- create TextView with given TextBuffer and attach highlighting handler
 createTextView :: Gtk.TextBuffer -> IO Gtk.TextView
@@ -23,30 +28,70 @@ createTextView textBuffer = do
 
     return textview
 
+--handleMarkSet :: Gtk.TextBuffer -> Gtk.TextIter -> Gtk.TextMark -> IO ()
+--handleMarkSet textBuffer iter mark = do
+--    markName <- Gtk.textMarkGetName mark
+--    when (markName == Just "insert") $ do
+--        -- Remove the existing highlighting first
+--        removeHighlighting textBuffer
+--
+--        -- Get the current word
+--        --wordToHighlight <- identifyWord iter
+--        --unless (T.null wordToHighlight) $ do
+--        --    highlightWordOccurrences textBuffer wordToHighlight
+--
+--        -- Check for bracket highlighting
+--        charRightOfCursor <- Gtk.textIterGetChar iter
+--        charLeftOfCursor  <- Gtk.textIterBackwardChar iter
+--        when (isBracket charRightOfCursor || isBracket charLeftOfCursor) $ do
+--            highlightMatchingBracket textBuffer iter
+
 handleMarkSet :: Gtk.TextBuffer -> Gtk.TextIter -> Gtk.TextMark -> IO ()
 handleMarkSet textBuffer iter mark = do
     markName <- Gtk.textMarkGetName mark
     when (markName == Just "insert") $ do
-        updateHighlighting textBuffer
+        -- Remove the existing highlighting first
+        removeHighlighting textBuffer
 
-updateHighlighting :: Gtk.TextBuffer -> IO ()
-updateHighlighting textBuffer = do
-    mark <- Gtk.textBufferGetInsert textBuffer
-    iter <- Gtk.textBufferGetIterAtMark textBuffer mark
+        charRightOfCursor <- Gtk.textIterGetChar iter
+        iterLeftOfCursor <- Gtk.textIterCopy iter
+        canMoveBack <- Gtk.textIterBackwardChar iterLeftOfCursor
+        charLeftOfCursor <- if canMoveBack
+                            then Gtk.textIterGetChar iterLeftOfCursor
+                            else return '\0'
 
-    removeHighlighting textBuffer
+        when (isBracket charRightOfCursor) $ do
+            highlightMatchingBracket textBuffer iter
 
-    wordToHighlight <- identifyWord iter
-    when (T.length wordToHighlight > 0) $
-        highlightWordOccurrences textBuffer wordToHighlight
+        when (isBracket charLeftOfCursor) $ do
+            highlightMatchingBracket textBuffer iterLeftOfCursor
 
 identifyWord :: Gtk.TextIter -> IO T.Text
-identifyWord iter = do
-    startWordIter <- Gtk.textIterCopy iter
-    _ <- Gtk.textIterBackwardWordStart startWordIter
-    endWordIter <- Gtk.textIterCopy iter
-    _ <- Gtk.textIterForwardWordEnd endWordIter
+identifyWord cursor = do
+    startWordIter <- Gtk.textIterCopy cursor
+    endWordIter <- Gtk.textIterCopy cursor
+
+    let moveStart = do
+            charAtStart <- Gtk.textIterGetChar startWordIter
+            atStart <- Gtk.textIterIsStart startWordIter
+            return $ not atStart && (isLetter charAtStart || isDigit charAtStart || charAtStart == '_')
+
+    let moveEnd = do
+            charAtEnd <- Gtk.textIterGetChar endWordIter
+            atEnd <- Gtk.textIterIsEnd endWordIter
+            return $ not atEnd && (isLetter charAtEnd || isDigit charAtEnd || charAtEnd == '_')
+
+    _ <- whileM_ moveStart $ Gtk.textIterBackwardChar startWordIter
+    _ <- whileM_ moveEnd $ Gtk.textIterForwardChar endWordIter
+
+    -- Extract the word
     Gtk.textIterGetText startWordIter endWordIter
+
+-- Helper function to execute an action while a condition remains true
+whileM_ :: Monad m => m Bool -> m a -> m ()
+whileM_ cond action = do
+    result <- cond
+    when result $ action >> whileM_ cond action
 
 removeHighlighting :: Gtk.TextBuffer -> IO ()
 removeHighlighting buffer = do
@@ -98,23 +143,3 @@ saveFile textBuffer filename = do
     endIter <- Gtk.textBufferGetEndIter textBuffer
     text <- Gtk.textBufferGetText textBuffer startIter endIter False
     TIO.writeFile filename text
-
--- helper
-isBracket :: Char -> Bool
-isBracket ch = ch `elem` ("[]{}()" :: String)
-
-isMatchingBracket :: Char -> Char -> Bool
-isMatchingBracket '(' ')' = True
-isMatchingBracket '{' '}' = True
-isMatchingBracket '[' ']' = True
-isMatchingBracket _ _     = False
-
-hasMatchingBrackets :: String -> Bool
-hasMatchingBrackets = go []
-  where
-    go [] [] = True
-    go _  [] = False
-    go stack (c:cs)
-      | c `elem` ("([{" :: String) = go (c:stack) cs
-      | c `elem` (")]}" :: String) && not (null stack) && isMatchingBracket (head stack) c = go (tail stack) cs
-      | otherwise = False

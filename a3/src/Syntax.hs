@@ -44,7 +44,7 @@ initTagTable tagTable = do
     _ <- createAndAddTag "value"             42 172 184 1  Foreground tagTable
     _ <- createAndAddTag "comment"           140 140 140 1 Foreground tagTable
     _ <- createAndAddTag "word-highlight"    237 235 252 1 Background tagTable
-    _ <- createAndAddTag "bracket-highlight" 237 235 0 1   Background tagTable
+    _ <- createAndAddTag "bracket-highlight" 237 235 0 1 Background tagTable
     return ()
 
 createTag :: T.Text -> Int -> Int -> Int -> Int -> StyleType -> IO Gtk.TextTag
