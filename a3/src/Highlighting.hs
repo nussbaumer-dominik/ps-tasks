@@ -63,54 +63,6 @@ escapeForRegex c
     | c `elem` ['\\', '.', '*', '+', '?', '^', '$', '(', ')', '[', ']', '{', '}', '|'] = T.pack ['\\', c]
     | otherwise = T.singleton c
 
---highlightMatchingBracket :: Gtk.TextBuffer -> Gtk.TextIter -> IO ()
---highlightMatchingBracket textBuffer iter = do
---    char <- Gtk.textIterGetChar iter
---    putStrLn $ "highlightMatchingBracket: " ++ show char
---
---    case getBracketDirection char of
---        Just (startingBracket, targetBracket, direction) -> do
---            maybeMatchingOffset <- if direction == Forward
---                                      then findBracketForward iter startingBracket targetBracket 1
---                                      else findBracketBackward iter startingBracket targetBracket 1
---            case maybeMatchingOffset of
---                Just matchingOffset -> do
---                    matchingIter <- getIterAtOffset textBuffer matchingOffset
---                    -- Adjust the matchingIter to cover the bracket character itself
---                    _ <- Gtk.textIterForwardChar matchingIter
---                    highlightIter textBuffer iter matchingIter "bracket-highlight"
---                Nothing -> return ()
---        Nothing -> return ()
-
---highlightMatchingBracket :: Gtk.TextBuffer -> Gtk.TextIter -> IO ()
---highlightMatchingBracket textBuffer iter = do
---    char <- Gtk.textIterGetChar iter
---    putStrLn $ "highlightMatchingBracket: " ++ show char
---
---    -- Save the offset of the original bracket
---    startingOffset <- Gtk.textIterGetOffset iter
---
---    case getBracketDirection char of
---        Just (startingBracket, targetBracket, direction) -> do
---            maybeMatchingOffset <- if direction == Forward
---                                      then findBracketForward iter startingBracket targetBracket 1
---                                      else findBracketBackward iter startingBracket targetBracket 1
---            case maybeMatchingOffset of
---                Just matchingOffset -> do
---                    matchingIter <- getIterAtOffset textBuffer matchingOffset
---                    _ <- Gtk.textIterForwardChar matchingIter  -- Adjust the matchingIter to cover the bracket character
---
---                    -- Retrieve the iter for the starting bracket using the saved offset
---                    startingBracketIter <- getIterAtOffset textBuffer (fromIntegral startingOffset)
---
---                    -- Highlight the starting bracket
---                    highlightIter textBuffer startingBracketIter startingBracketIter "bracket-highlight"
---
---                    -- Highlight the matching bracket
---                    highlightIter textBuffer matchingIter matchingIter "bracket-highlight"
---                Nothing -> return ()
---        Nothing -> return ()
-
 highlightMatchingBracket :: Gtk.TextBuffer -> Gtk.TextIter -> IO ()
 highlightMatchingBracket textBuffer iter = do
     char <- Gtk.textIterGetChar iter
@@ -122,8 +74,8 @@ highlightMatchingBracket textBuffer iter = do
     case getBracketDirection char of
         Just (startingBracket, targetBracket, direction) -> do
             maybeMatchingOffset <- if direction == Forward
-                                      then findBracketForward iter startingBracket targetBracket 1
-                                      else findBracketBackward iter startingBracket targetBracket 1
+                                      then findBracket iter startingBracket targetBracket 1 Forward
+                                      else findBracket iter startingBracket targetBracket 1 Backward
             case maybeMatchingOffset of
                 Just matchingOffset -> do
                     matchingIter <- getIterAtOffset textBuffer matchingOffset
@@ -141,16 +93,11 @@ highlightMatchingBracket textBuffer iter = do
                 Nothing -> return ()
         Nothing -> return ()
 
-
-advanceByOne :: Gtk.TextIter -> IO Gtk.TextIter
-advanceByOne iter = do
-    newIter <- Gtk.textIterCopy iter
-    _ <- Gtk.textIterBackwardChar newIter
-    return newIter
-
-findBracketForward :: Gtk.TextIter -> Char -> Char -> Int -> IO (Maybe Int)
-findBracketForward iter startingBracket targetBracket nesting = do
-    moveSuccess <- Gtk.textIterForwardChar iter
+findBracket :: Gtk.TextIter -> Char -> Char -> Int -> Direction -> IO (Maybe Int)
+findBracket iter startingBracket targetBracket nesting direction = do
+    moveSuccess <- case direction of
+        Forward -> Gtk.textIterForwardChar iter
+        Backward -> Gtk.textIterBackwardChar iter
     if moveSuccess then do
         currentChar <- Gtk.textIterGetChar iter
         let adjustedNesting = adjustNesting currentChar
@@ -159,7 +106,7 @@ findBracketForward iter startingBracket targetBracket nesting = do
         else if adjustedNesting < 0 then
             return Nothing
         else
-            findBracketForward iter startingBracket targetBracket adjustedNesting
+            findBracket iter startingBracket targetBracket adjustedNesting direction
     else return Nothing
   where
     adjustNesting char
@@ -167,25 +114,7 @@ findBracketForward iter startingBracket targetBracket nesting = do
         | char == startingBracket = nesting + 1
         | otherwise = nesting
 
-findBracketBackward :: Gtk.TextIter -> Char -> Char -> Int -> IO (Maybe Int)
-findBracketBackward iter startingBracket targetBracket nesting = do
-    moveSuccess <- Gtk.textIterBackwardChar iter
-    if moveSuccess then do
-        currentChar <- Gtk.textIterGetChar iter
-        let adjustedNesting = adjustNesting currentChar
-        if currentChar == targetBracket && adjustedNesting == 0 then
-            (Just . fromIntegral) <$> Gtk.textIterGetOffset iter
-        else if adjustedNesting < 0 then
-            return Nothing
-        else
-            findBracketBackward iter startingBracket targetBracket adjustedNesting
-    else return Nothing
-  where
-    adjustNesting char
-        | char == targetBracket = nesting - 1
-        | char == startingBracket = nesting + 1
-        | otherwise = nesting
-
+-- helper
 highlightIter :: Gtk.TextBuffer -> Gtk.TextIter -> Gtk.TextIter -> T.Text -> IO ()
 highlightIter textBuffer start end tagName = do
     putStrLn $ "highlightIter: " ++ T.unpack tagName
@@ -228,7 +157,6 @@ getIterAtOffset textBuffer offset = do
     iter <- Gtk.textBufferGetIterAtOffset textBuffer (fromIntegral offset)
     return iter
 
--- helper
 isBracket :: Char -> Bool
 isBracket ch = ch `elem` ("[]{}()" :: String)
 
