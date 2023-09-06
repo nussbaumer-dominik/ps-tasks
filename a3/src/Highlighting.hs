@@ -173,22 +173,3 @@ getBracketDirection '}' = Just ('}', '{', Backward)
 getBracketDirection '(' = Just ('(', ')', Forward)
 getBracketDirection ')' = Just (')', '(', Backward)
 getBracketDirection _   = Nothing
-
-isMatchingBracket :: Char -> Char -> Bool
-isMatchingBracket '(' ')' = True
-isMatchingBracket '[' ']' = True
-isMatchingBracket '{' '}' = True
-isMatchingBracket ')' '(' = True
-isMatchingBracket ']' '[' = True
-isMatchingBracket '}' '{' = True
-isMatchingBracket _ _     = False
-
-hasMatchingBrackets :: String -> Bool
-hasMatchingBrackets = go []
-  where
-    go [] [] = True
-    go _  [] = False
-    go stack (c:cs)
-      | c `elem` ("([{" :: String) = go (c:stack) cs
-      | c `elem` (")]}" :: String) && not (null stack) && isMatchingBracket (head stack) c = go (tail stack) cs
-      | otherwise = False
