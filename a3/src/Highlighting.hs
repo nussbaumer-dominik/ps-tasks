@@ -9,7 +9,7 @@ module Highlighting ( highlightSyntax
 
 import qualified Data.Text as T
 import qualified GI.Gtk as Gtk
-import Control.Monad (forM_)
+import Control.Monad (forM_, unless)
 import Text.Regex.PCRE
 import Syntax
 
@@ -27,13 +27,11 @@ highlightSyntax textBuffer = do
     tagTable <- Gtk.textBufferGetTagTable textBuffer
 
     forM_ tokenPositions $ \(styleName, _, (startPos, endPos)) -> do
-        mTagMaybe <- getTag tagTable styleName
-        case mTagMaybe of
-            Just tag -> do
-                sIter <- getIterAtOffset textBuffer startPos
-                eIter <- getIterAtOffset textBuffer endPos
-                Gtk.textBufferApplyTag textBuffer tag sIter eIter
-            Nothing -> return ()
+        tag <- getTag tagTable styleName
+        sIter <- getIterAtOffset textBuffer startPos
+        eIter <- getIterAtOffset textBuffer endPos
+        Gtk.textBufferApplyTag textBuffer tag sIter eIter
+
     return ()
 
 getBufferBounds :: Gtk.TextBuffer -> IO (Gtk.TextIter, Gtk.TextIter)
@@ -51,24 +49,25 @@ highlightWordOccurrences :: Gtk.TextBuffer -> T.Text -> IO ()
 highlightWordOccurrences textBuffer word = do
     putStrLn $ "highlightWordOccurrences: " ++ T.unpack word
 
-    let escapedWord = T.unpack $ T.concatMap escapeForRegex word
-    let regexPattern = "\\b" ++ escapedWord ++ "\\b"
+    unless (T.null word) $ do
+        let escapedWord = T.unpack $ T.concatMap escapeForRegex word
+        let regexPattern = if T.length word > 1
+                           then "\\b" ++ escapedWord ++ "\\b"
+                           else escapedWord
 
-    startIter <- Gtk.textBufferGetStartIter textBuffer
-    endIter <- Gtk.textBufferGetEndIter textBuffer
-    text <- Gtk.textBufferGetText textBuffer startIter endIter False
+        startIter <- Gtk.textBufferGetStartIter textBuffer
+        endIter <- Gtk.textBufferGetEndIter textBuffer
+        text <- Gtk.textBufferGetText textBuffer startIter endIter False
 
-    let matches = getAllMatches $ T.unpack text =~ regexPattern :: [(Int, Int)]
-    tagTable <- Gtk.textBufferGetTagTable textBuffer
-    mTagMaybe <- getTag tagTable "word-highlight"
+        let matches = map (\(start, len) -> (start, start + len)) $ getAllMatches $ T.unpack text =~ regexPattern :: [(Int, Int)]
+        putStrLn $ show matches
+        tagTable <- Gtk.textBufferGetTagTable textBuffer
+        tag <- getTag tagTable "word-highlight"
 
-    case mTagMaybe of
-        Just tag -> do
-            forM_ matches $ \(startPos, endPos) -> do
-                sIter <- getIterAtOffset textBuffer startPos
-                eIter <- getIterAtOffset textBuffer endPos
-                Gtk.textBufferApplyTag textBuffer tag sIter eIter
-        Nothing -> return ()
+        forM_ matches $ \(startPos, endPos) -> do
+            sIter <- getIterAtOffset textBuffer startPos
+            eIter <- getIterAtOffset textBuffer endPos
+            Gtk.textBufferApplyTag textBuffer tag sIter eIter
 
 escapeForRegex :: Char -> T.Text
 escapeForRegex c
@@ -78,7 +77,6 @@ escapeForRegex c
 highlightMatchingBracket :: Gtk.TextBuffer -> Gtk.TextIter -> IO ()
 highlightMatchingBracket textBuffer iter = do
     char <- Gtk.textIterGetChar iter
-    putStrLn $ "highlightMatchingBracket: " ++ show char
 
     -- Save the offset of the original bracket
     startingOffset <- Gtk.textIterGetOffset iter
@@ -129,17 +127,10 @@ findBracket iter startingBracket targetBracket nesting direction = do
 -- helper
 highlightIter :: Gtk.TextBuffer -> Gtk.TextIter -> Gtk.TextIter -> T.Text -> IO ()
 highlightIter textBuffer start end tagName = do
-    putStrLn $ "highlightIter: " ++ T.unpack tagName
-    offsetStart <- Gtk.textIterGetOffset start
-    putStrLn $ "start offset: " ++ show offsetStart
-
-    offsetEnd <- Gtk.textIterGetOffset end
-    putStrLn $ "end offset: " ++ show offsetEnd
     tagTable <- Gtk.textBufferGetTagTable textBuffer
-    mTag <- getTag tagTable (T.unpack tagName)
-    case mTag of
-        Just tag -> Gtk.textBufferApplyTag textBuffer tag start end
-        Nothing -> return ()
+    tag <- getTag tagTable (T.unpack tagName)
+    Gtk.textBufferApplyTag textBuffer tag start end
+    return ()
 
 getTokenPositions :: T.Text -> [SyntaxRule] -> [(String, String, (Int, Int))]
 getTokenPositions text rules =
@@ -153,7 +144,7 @@ findMatches t rule =
   where
     calculateEnd (start, len) = (start, start + len)
 
-getTag :: Gtk.TextTagTable -> String -> IO (Maybe Gtk.TextTag)
+getTag :: Gtk.TextTagTable -> String -> IO (Gtk.TextTag)
 getTag tagTable styleName = do
     let tagName = T.pack styleName
     mTag <- Gtk.textTagTableLookup tagTable tagName
@@ -161,8 +152,8 @@ getTag tagTable styleName = do
         Nothing -> do
             newTag <- Gtk.textTagNew (Just tagName)
             _ <- Gtk.textTagTableAdd tagTable newTag
-            return $ Just newTag
-        Just tag -> return $ Just tag
+            return $ newTag
+        Just tag -> return tag
 
 getIterAtOffset :: Gtk.TextBuffer -> Int -> IO Gtk.TextIter
 getIterAtOffset textBuffer offset = do
