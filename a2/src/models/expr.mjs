@@ -1,21 +1,3 @@
-class Expr {
-    expr;
-    basic;
-
-    constructor(expr, basic) {
-        this.expr = expr;
-        this.basic = basic;
-    }
-
-    static createBasic(basic) {
-        return new Expr(undefined, basic);
-    }
-
-    static createExpression(expr, basic) {
-        return new Expr(expr, basic);
-    }
-}
-
 class Basic {
     assignment;
     value;
@@ -102,4 +84,4 @@ class Assign {
     }
 }
 
-export {Expr, Basic, Value, FunctionCall, FunctionDefinition, Assign};
+export {Basic, Value, FunctionCall, FunctionDefinition, Assign};

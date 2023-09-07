@@ -1,3 +1,6 @@
-foo := 1
-list := [1, foo, (nr) => { nr := plus{nr, 1} }, 4]
+x := 1
+y := 2
+x := minus{x, y}
+res := cond{x, 0, 1}
 
+res{}

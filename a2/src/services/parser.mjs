@@ -1,6 +1,12 @@
 import {Type} from "../models/type.mjs";
-import {Expr, Basic, Value, FunctionCall, Assign, FunctionDefinition} from "../models/expr.mjs";
+import {Basic, Value, FunctionCall, Assign, FunctionDefinition} from "../models/expr.mjs";
 
+/**
+ * Parses a list of tokens into a list of expressions
+ * Generate the AST tree
+ * @param tokens
+ * @returns {*[]} - A list of basic expressions
+ */
 function parse(tokens) {
     const result = [];
     while (tokens.length > 0) {
@@ -13,8 +19,14 @@ function parse(tokens) {
     return result;
 }
 
+/**
+ * Parses a basic expression
+ * A basic expression is either a value or an assignment
+ * @param basicTokens - A list of tokens representing a basic expression
+ * @returns {Basic} - A basic expression
+ */
 function parseBasic(basicTokens) {
-    //check for lambda
+    //check for lambda - create basic with assignment
     if (basicTokens[0].type === Type.ENTITY && basicTokens.length > 1 && basicTokens[1].type === Type.ASSIGN) {
         let name = basicTokens[0].text;
         basicTokens.shift();
@@ -49,28 +61,50 @@ function parseBasic(basicTokens) {
         return Basic.createAssignment(new Assign(name, parseBasic(expression)));
     }
 
-    //else check for apply
+    //create basic with value
     return Basic.createValue(parseValue(basicTokens));
 }
 
-function parseFunctionCall(valueTokens) {
-    const name = valueTokens[0].text;
+/**
+ * Parses a function call
+ * @param tokens - A list of tokens representing a function call
+ * @returns {FunctionCall} - A function call
+ */
+function parseFunctionCall(tokens) {
+    const name = tokens[0].text;
 
-    let exprTokens = parseExpression(valueTokens);
+    let valueTokens = getTokensInBrackets(tokens);
     //remove closing parenthesis
-    valueTokens.shift();
-    return Value.createFunctionCall(new FunctionCall(name, parseValues(exprTokens)));
+    tokens.shift(); // }
+    return new FunctionCall(name, parseValues(valueTokens));
 }
 
+/**
+ * Checks if the tokens represent a function call
+ * @param valueTokens - A list of tokens representing a function call
+ * @returns {boolean}
+ */
 function isFunctionCall(valueTokens) {
     return valueTokens[0].type === Type.ENTITY && valueTokens[1]?.type === Type.LCURLY;
 }
 
+/**
+ * Checks if the tokens represent a function definition
+ * @param valueTokens - A list of tokens representing a function definition
+ * @returns {boolean}
+ */
 function isFunctionDefinition(valueTokens) {
     return valueTokens[0].type === Type.LPAREN;
 }
 
-function parseExpression(valueTokens) {
+/**
+ * Returns the tokens between the opening and closing parenthesis
+ * Removes the opening and closing parenthesis
+ * Changes the valueTokens list so that it only contains the tokens after the closing parenthesis
+ * @param valueTokens - A list of tokens representing an expression
+ * @returns {any[]} - A list of tokens that are between the opening and closing parenthesis
+ */
+function getTokensInBrackets(valueTokens) {
     valueTokens.shift(); // =>
     valueTokens.shift(); // {
     let i = 0;
@@ -89,6 +123,11 @@ function parseExpression(valueTokens) {
     return valueTokens.splice(0, i - 1);
 }
 
+/**
+ * Parses a function definition
+ * @param valueTokens - A list of tokens representing a function definition
+ * @returns {FunctionDefinition} - A function definition
+ */
 function parseFunctionDefinition(valueTokens) {
     // Parse names
     valueTokens.shift(); // (
@@ -103,23 +142,28 @@ function parseFunctionDefinition(valueTokens) {
     valueTokens.shift();
 
     // Parse function body
-    let exprTokens = parseExpression(valueTokens);
+    let exprTokens = getTokensInBrackets(valueTokens);
     const expressions = parse(exprTokens);
     //remove closing parenthesis
     valueTokens.shift(); // }
-    return Value.createFunctionDefinition(new FunctionDefinition(names, expressions));
+    return new FunctionDefinition(names, expressions);
 }
 
+/**
+ * Parses a value
+ * @param valueTokens - A list of tokens representing a value
+ * @returns {Value} - A value
+ */
 function parseValue(valueTokens) {
-    let basic = null;
+    let basic;
     //check for number
     if (valueTokens[0].type === Type.NUMBER) {
         basic = Value.createNumber(valueTokens[0].text);
         valueTokens.shift();
     } else if (isFunctionDefinition(valueTokens)) {
-        basic = parseFunctionDefinition(valueTokens);
+        basic = Value.createFunctionDefinition(parseFunctionDefinition(valueTokens));
     } else if (isFunctionCall(valueTokens)) {
-        basic = parseFunctionCall(valueTokens);
+        basic = Value.createFunctionCall(parseFunctionCall(valueTokens));
     } else if (valueTokens[0].type === Type.LSQUARE) {
         basic = Value.createList(parseList(valueTokens));
     } else if (valueTokens[0].type === Type.ENTITY || valueTokens[0].type === Type.OPERATION) {
@@ -133,14 +177,18 @@ function parseValue(valueTokens) {
     return basic;
 }
 
-
+/**
+ * Parses a list of values
+ * @param valueTokens - A list of tokens representing a list of values
+ * @returns {*[]} - A list of values
+ */
 function parseValues(valueTokens) {
     const resultValues = [];
     while (valueTokens.length > 0) {
         const token = valueTokens[0];
         const next = valueTokens[1];
         if (isFunctionCall(valueTokens)) {
-            resultValues.push(parseFunctionCall(valueTokens));
+            resultValues.push(Value.createFunctionCall(parseFunctionCall(valueTokens)));
         } else if ((token.type === Type.NUMBER || token.type === Type.ENTITY) && (next === undefined || next.type === Type.COMMA || next.type === Type.RSQUARE)) {
             resultValues.push(parseValue([token]))
             valueTokens.shift();
@@ -150,9 +198,18 @@ function parseValues(valueTokens) {
     return resultValues;
 }
 
+/**
+ * Parses a list of values
+ * Lists must start with a left square bracket and end with a right square bracket
+ * @param listTokens - A list of tokens representing a list of values
+ * @returns {*[]} - A list of values
+ */
 function parseList(listTokens) {
     //check for opening square bracket
-    listTokens.shift();
+    if (listTokens[0].type !== Type.LSQUARE) {
+        throw new Error("Invalid list");
+    }
+    listTokens.shift(); // [
     const values = [];
     while (listTokens[0].type !== Type.RSQUARE) {
         if (listTokens[0].type === Type.COMMA) {
