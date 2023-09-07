@@ -34,6 +34,7 @@ highlightSyntax textBuffer = do
     eIter <- getIterAtOffset textBuffer endPos
     Gtk.textBufferApplyTag textBuffer tag sIter eIter
 
+  highlightUnbalancedBrackets textBuffer
   return ()
 
 getBufferBounds :: Gtk.TextBuffer -> IO (Gtk.TextIter, Gtk.TextIter)
@@ -128,6 +129,45 @@ findBracket iter startingBracket targetBracket nesting direction = do
       | char == targetBracket = nesting - 1
       | char == startingBracket = nesting + 1
       | otherwise = nesting
+
+-- TODO: Refactor this by integrating it into highlightSyntax
+highlightUnbalancedBrackets :: Gtk.TextBuffer -> IO ()
+highlightUnbalancedBrackets textBuffer = do
+    startIter <- #getStartIter textBuffer
+    endIter <- #getEndIter textBuffer
+    text <- Gtk.textBufferGetText textBuffer startIter endIter False
+
+    let unbalancedPositions = getUnbalancedBrackets text
+    putStrLn $ show unbalancedPositions
+    tagTable <- Gtk.textBufferGetTagTable textBuffer
+    tag <- getTag tagTable "unmatched-bracket"
+
+    forM_ unbalancedPositions $ \(_, (start, end)) -> do
+        sIter <- getIterAtOffset textBuffer start
+        eIter <- getIterAtOffset textBuffer end
+        Gtk.textBufferApplyTag textBuffer tag sIter eIter
+
+getUnbalancedBrackets :: T.Text -> [(String, (Int, Int))]
+getUnbalancedBrackets text = checkBalance (T.unpack text) 0 [] []
+
+checkBalance :: String -> Int -> [(Char, Int)] -> [(String, (Int, Int))] -> [(String, (Int, Int))]
+checkBalance [] _ [] positions = positions
+checkBalance [] _ stack positions =
+    positions ++ map (\(bracket, index) -> ([bracket], (index, index + 1))) stack
+checkBalance (x:xs) index stack positions
+    | x `elem` ("([{" :: String) = checkBalance xs (index+1) ((x, index):stack) positions
+    | x `elem` (")]}" :: String) && not (null stack) && isMatching (fst $ head stack) x = checkBalance xs (index+1) (tail stack) positions
+    | x `elem` (")]}" :: String) && (null stack || not (isMatching (fst $ head stack) x)) = checkBalance xs (index+1) stack (([x], (index, index+1)) : positions)
+    | otherwise = checkBalance xs (index+1) stack positions
+
+isMatching :: Char -> Char -> Bool
+isMatching '(' ')' = True
+isMatching '{' '}' = True
+isMatching '[' ']' = True
+isMatching ')' '(' = True
+isMatching '}' '{' = True
+isMatching ']' '[' = True
+isMatching _   _   = False
 
 -- helper
 highlightIter :: Gtk.TextBuffer -> Gtk.TextIter -> Gtk.TextIter -> T.Text -> IO ()

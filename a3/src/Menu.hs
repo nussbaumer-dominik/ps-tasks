@@ -8,6 +8,7 @@ import FileHandler (openFile)
 import qualified GI.Gtk as Gtk
 import TextView (saveFile)
 
+-- | Create the menu bar.
 createMenuBar :: Gtk.Window -> Gtk.TextBuffer -> FilePath -> IO Gtk.MenuBar
 createMenuBar win textbuffer filepath = do
   menubar <- new Gtk.MenuBar []

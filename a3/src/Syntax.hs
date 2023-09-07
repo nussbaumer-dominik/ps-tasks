@@ -28,6 +28,18 @@ valuePattern = "\\b[0-9]+\\b"
 commentPattern :: T.Text
 commentPattern = "--[^\n]*$" -- everything after "--" until end of line
 
+openBrackets :: T.Text
+openBrackets = T.pack "{[("
+
+closeBrackets :: T.Text
+closeBrackets = T.pack "}])"
+
+matchOpen :: Char -> Maybe Char
+matchOpen '}' = Just '{'
+matchOpen ']' = Just '['
+matchOpen ')' = Just '('
+matchOpen _   = Nothing
+
 syntaxRules :: [SyntaxRule]
 syntaxRules =
   [ SyntaxRule keywordsPattern "keyword",
@@ -46,6 +58,7 @@ initTagTable tagTable = do
   _ <- createAndAddTag "comment" 140 140 140 1 Foreground tagTable
   _ <- createAndAddTag "word-highlight" 237 235 252 1 Background tagTable
   _ <- createAndAddTag "bracket-highlight" 237 235 252 1 Background tagTable
+  _ <- createAndAddTag "unmatched-bracket" 255 0 0 1 Foreground tagTable
   return ()
 
 createTag :: T.Text -> Int -> Int -> Int -> Int -> StyleType -> IO Gtk.TextTag
