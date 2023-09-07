@@ -1,4 +1,4 @@
-import {Basic, Value} from "../models/expr.mjs";
+import {Basic, Value} from "../models/expressionClasses.mjs";
 
 const memory = new Map()
 

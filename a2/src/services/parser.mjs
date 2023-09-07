@@ -1,5 +1,5 @@
 import {Type} from "../models/type.mjs";
-import {Basic, Value, FunctionCall, Assign, FunctionDefinition} from "../models/expr.mjs";
+import {Basic, Value, FunctionCall, Assign, FunctionDefinition} from "../models/expressionClasses.mjs";
 
 /**
  * Parses a list of tokens into a list of expressions
