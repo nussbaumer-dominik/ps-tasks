@@ -2,7 +2,7 @@ package at.ac.tuwien.a1.app.helper.operations
 
 
 /**
- * Object representing an register operation
+ * Object representing a register operation
  * */
 data class RegisterOperation(val target: String, val operation: RegisterOperationRepresentation) : CalculatorOperation
 

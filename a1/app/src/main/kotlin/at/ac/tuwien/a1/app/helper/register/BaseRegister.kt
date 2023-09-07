@@ -22,7 +22,7 @@ class BaseRegister(
 
     override fun put(position: Char, data: DataEntry) {
         checkPosition(position)
-        registerData.put(position.lowercaseChar(), data)
+        registerData[position.lowercaseChar()] = data
     }
 
     private fun checkPosition(position: Char) {

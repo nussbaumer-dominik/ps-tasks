@@ -18,3 +18,6 @@ interface Register {
      * */
     fun put(position: Char, data: DataEntry)
 }
+
+inline fun <reified T : DataEntry> Register.getOfType(position: Char): T = get(position) as? T
+    ?: error("Register at $position does not contain the correct type or value")
