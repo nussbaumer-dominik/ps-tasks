@@ -1,22 +1,23 @@
 ```
-<expr> ::= <basic>
-    | <expr> <basic>
+<prog> ::= <basic>
+    | <basic> <prog>
 
 <basic> ::= <value>
     | <assignment>
     | <EOL>
 
-<assignment> ::= <name> `:=` <expr><EOL>
+<assignment> ::= <name> `:=` <basic>
 
 <names> ::= <name>
     | <names> ’,’ <name>
  
 <values> ::= <value>
     | <values> ’,’ <value>   
+    
 <value> ::= <integer>
     | <name>
     | <functionCall>
-    | ’[’ <values> ’]’
+    | ’[’ <values> ’]’  // list
     | <functionDefinition>
     
 <functionCall> ::= <name>'{'<values>'}'
