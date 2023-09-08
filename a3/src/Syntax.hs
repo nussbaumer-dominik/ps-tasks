@@ -34,12 +34,6 @@ openBrackets = T.pack "{[("
 closeBrackets :: T.Text
 closeBrackets = T.pack "}])"
 
-matchOpen :: Char -> Maybe Char
-matchOpen '}' = Just '{'
-matchOpen ']' = Just '['
-matchOpen ')' = Just '('
-matchOpen _   = Nothing
-
 syntaxRules :: [SyntaxRule]
 syntaxRules =
   [ SyntaxRule keywordsPattern "keyword",

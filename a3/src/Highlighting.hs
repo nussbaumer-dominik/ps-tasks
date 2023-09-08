@@ -6,6 +6,7 @@ module Highlighting
     highlightWordOccurrences,
     highlightMatchingBracket,
     isBracket,
+    getBufferBounds,
   )
 where
 
@@ -25,24 +26,23 @@ highlightSyntax textBuffer = do
   endIter <- #getEndIter textBuffer
   text <- Gtk.textBufferGetText textBuffer startIter endIter False
 
-  let tokenPositions = getTokenPositions text syntaxRules
+  let tokenPositions = (getTokenPositions text syntaxRules) ++ (getUnbalancedBrackets text)
   putStrLn $ show tokenPositions
-  tagTable <- Gtk.textBufferGetTagTable textBuffer
 
+  applyTags textBuffer tokenPositions
+  return ()
+
+-- | Applies a list of tags to a 'Gtk.TextBuffer'.
+applyTags :: Gtk.TextBuffer -> [(String, String, (Int, Int))] -> IO ()
+applyTags textBuffer tokenPositions = do
+  tagTable <- Gtk.textBufferGetTagTable textBuffer
   forM_ tokenPositions $ \(styleName, _, (startPos, endPos)) -> do
     tag <- getTag tagTable styleName
     sIter <- getIterAtOffset textBuffer startPos
     eIter <- getIterAtOffset textBuffer endPos
     Gtk.textBufferApplyTag textBuffer tag sIter eIter
 
-  highlightUnbalancedBrackets textBuffer
-  return ()
-
 -- | Fetches the start and end iterators of a given 'Gtk.TextBuffer'.
---
--- This function is useful for operations that need to span the entire content
--- of the buffer, such as extracting all text or applying/removing tags.
---
 -- Returns a tuple containing the start and end iterators.
 getBufferBounds :: Gtk.TextBuffer -> IO (Gtk.TextIter, Gtk.TextIter)
 getBufferBounds buffer = do
@@ -51,9 +51,7 @@ getBufferBounds buffer = do
   return (startIter, endIter)
 
 -- | Removes all highlighting (tags) from the given 'Gtk.TextBuffer'.
---
--- This function fetches the bounds of the buffer and then removes all tags
--- (i.e., highlighting) within that range.
+-- This function fetches the bounds of the buffer and then removes all tags within that range.
 removeHighlighting :: Gtk.TextBuffer -> IO ()
 removeHighlighting buffer = do
   (startIter, endIter) <- getBufferBounds buffer
@@ -74,11 +72,7 @@ highlightWordOccurrences textBuffer word = do
   putStrLn $ "highlightWordOccurrences: " ++ T.unpack word
 
   unless (T.null word) $ do
-    let escapedWord = T.unpack $ T.concatMap escapeForRegex word
-    let regexPattern =
-          if T.length word > 1
-            then "\\b" ++ escapedWord ++ "\\b"
-            else escapedWord
+    let regexPattern = "\\b" ++ T.unpack word ++ "\\b"
 
     startIter <- Gtk.textBufferGetStartIter textBuffer
     endIter <- Gtk.textBufferGetEndIter textBuffer
@@ -94,15 +88,7 @@ highlightWordOccurrences textBuffer word = do
       eIter <- getIterAtOffset textBuffer endPos
       Gtk.textBufferApplyTag textBuffer tag sIter eIter
 
--- | Escapes a character for use in a regular expression.
--- Takes a Char as input and the escaped character as a 'T.Text'.
-escapeForRegex :: Char -> T.Text
-escapeForRegex c
-  | c `elem` ['\\', '.', '*', '+', '?', '^', '$', '(', ')', '[', ']', '{', '}', '|'] = T.pack ['\\', c]
-  | otherwise = T.singleton c
-
 -- | Highlights a bracket and its matching counterpart in a 'Gtk.TextBuffer'.
---
 -- Given a 'Gtk.TextIter' pointing to a bracket in a 'Gtk.TextBuffer', this function
 -- will highlight both the bracket and its matching counterpart (if found). The search
 -- for the matching bracket considers nested brackets of the same type.
@@ -174,26 +160,9 @@ findBracket iter startingBracket targetBracket nesting direction = do
       | char == startingBracket = nesting + 1
       | otherwise = nesting
 
--- TODO: Refactor this by integrating it into highlightSyntax
-highlightUnbalancedBrackets :: Gtk.TextBuffer -> IO ()
-highlightUnbalancedBrackets textBuffer = do
-  startIter <- #getStartIter textBuffer
-  endIter <- #getEndIter textBuffer
-  text <- Gtk.textBufferGetText textBuffer startIter endIter False
-
-  let unbalancedPositions = getUnbalancedBrackets text
-  putStrLn $ show unbalancedPositions
-  tagTable <- Gtk.textBufferGetTagTable textBuffer
-  tag <- getTag tagTable "unmatched-bracket"
-
-  forM_ unbalancedPositions $ \(_, (start, end)) -> do
-    sIter <- getIterAtOffset textBuffer start
-    eIter <- getIterAtOffset textBuffer end
-    Gtk.textBufferApplyTag textBuffer tag sIter eIter
-
 -- | Identifies positions of unbalanced brackets in a given text.
 -- Returns a list of unbalanced brackets and their positions.
-getUnbalancedBrackets :: T.Text -> [(String, (Int, Int))]
+getUnbalancedBrackets :: T.Text -> [(String, String, (Int, Int))]
 getUnbalancedBrackets text = checkBalance (T.unpack text) 0 [] []
 
 -- | Recursively checks the balance of brackets in a string.
@@ -204,14 +173,14 @@ getUnbalancedBrackets text = checkBalance (T.unpack text) 0 [] []
 -- * A list of positions of unbalanced brackets found so far.
 --
 -- Returns a list of unbalanced brackets and their positions.
-checkBalance :: String -> Int -> [(Char, Int)] -> [(String, (Int, Int))] -> [(String, (Int, Int))]
+checkBalance :: String -> Int -> [(Char, Int)] -> [(String, String, (Int, Int))] -> [(String, String, (Int, Int))]
 checkBalance [] _ [] positions = positions
 checkBalance [] _ stack positions =
-  positions ++ map (\(bracket, index) -> ([bracket], (index, index + 1))) stack
+  positions ++ map (\(bracket, index) -> ("unmatched-bracket", [bracket], (index, index + 1))) stack
 checkBalance (x : xs) index stack positions
   | x `elem` ("([{" :: String) = checkBalance xs (index + 1) ((x, index) : stack) positions
   | x `elem` (")]}" :: String) && not (null stack) && isMatching (fst $ head stack) x = checkBalance xs (index + 1) (tail stack) positions
-  | x `elem` (")]}" :: String) && (null stack || not (isMatching (fst $ head stack) x)) = checkBalance xs (index + 1) stack (([x], (index, index + 1)) : positions)
+  | x `elem` (")]}" :: String) && (null stack || not (isMatching (fst $ head stack) x)) = checkBalance xs (index + 1) stack (("unmatched-bracket", [x], (index, index + 1)) : positions)
   | otherwise = checkBalance xs (index + 1) stack positions
 
 -- | Checks if two brackets are matching pairs.
@@ -236,12 +205,11 @@ highlightIter textBuffer start end tagName = do
   tagTable <- Gtk.textBufferGetTagTable textBuffer
   tag <- getTag tagTable (T.unpack tagName)
   Gtk.textBufferApplyTag textBuffer tag start end
-  return ()
 
 -- | Retrieves positions of tokens in a text based on a list of syntax rules.
 -- This function scans the provided text and identifies tokens based on the provided
 -- syntax rules. Each identified token is returned as a tuple containing:
--- * The name or type of the token (e.g., "keyword", "string").
+-- * The name or type of the token.
 -- * The matched token content.
 -- * A tuple indicating the start and end positions of the token in the text.
 --
@@ -257,7 +225,7 @@ getTokenPositions text rules =
 -- | Finds matches in a text based on a given syntax rule.
 -- This function scans the provided text and identifies tokens based on the provided
 -- syntax rule. Each identified token is returned as a tuple containing:
--- * The style tag associated with the syntax rule (e.g., "keyword", "string").
+-- * The style tag associated with the syntax rule.
 -- * The matched token content.
 -- * A tuple indicating the start and end positions of the token in the text.
 --
@@ -298,9 +266,7 @@ getTag tagTable styleName = do
 --
 -- Returns the 'Gtk.TextIter' at the specified offset.
 getIterAtOffset :: Gtk.TextBuffer -> Int -> IO Gtk.TextIter
-getIterAtOffset textBuffer offset = do
-  iter <- Gtk.textBufferGetIterAtOffset textBuffer (fromIntegral offset)
-  return iter
+getIterAtOffset textBuffer offset = Gtk.textBufferGetIterAtOffset textBuffer (fromIntegral offset)
 
 -- | Checks if a given character is a bracket.
 -- Returns 'True' if the character is a bracket, 'False' otherwise.
@@ -311,7 +277,6 @@ isBracket ch = ch `elem` ("[]{}()" :: String)
 data Direction = Forward | Backward deriving (Eq)
 
 -- | Retrieves the matching bracket and a search direction for a given bracket character.
--- Takes a bracket character as input and returns a tuple containing:
 getBracketDirection :: Char -> Maybe (Char, Char, Direction)
 getBracketDirection '[' = Just ('[', ']', Forward)
 getBracketDirection ']' = Just (']', '[', Backward)
