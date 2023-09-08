@@ -1,6 +1,6 @@
-
-start := 2
-end := 31
+#set the start and end of the range
+start := 2  #inclusive
+end := 31   #exclusive
 
 invalidate := () => {
     found := 1

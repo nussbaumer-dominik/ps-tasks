@@ -12,6 +12,7 @@ const Type = {
     LSQUARE: "left_square",
     RSQUARE: "right_square",
     COMMA: "comma",
+    COMMENT: "comment",
     EOL: "end_of_line",
     EOF: "end_of_file"
 }

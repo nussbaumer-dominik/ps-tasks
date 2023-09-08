@@ -2,7 +2,7 @@ import {Token} from "../models/token.mjs";
 import {Type} from "../models/type.mjs";
 
 
-const wordBreaks = [' ', '(', ')', '{', '}', ',', '[', ']', ':', '=', '>', '<', '+', '-', '*', '/', '%'];
+const wordBreaks = [' ', '(', ')', '{', '}', ',', '[', ']', ':', '=', '>', '<', '+', '-', '*', '/', '%', '#'];
 
 function lex(input) {
     if (input === undefined) {
@@ -15,6 +15,12 @@ function lex(input) {
 
     while (currentPos < input.length) {
         let char = input[currentPos];
+
+        if (char === '#') {
+            tokens.push(new Token(Type.COMMENT, input.substring(currentPos, input.length), currentPos));
+            currentPos = input.length;
+        }
+
         //skip whitespace
         if (char === ' ') {
             currentPos++;
@@ -56,13 +62,19 @@ function lex(input) {
             continue;
         }
         //check for assignment :=
-        if (char === ':' && currentPos + 1 < input.length  && input[currentPos + 1] === '=') {
+        if (char === ':' && currentPos + 1 < input.length ) {
+            if (input[currentPos + 1] !== '=') {
+                throw new Error("Invalid token " + char + input[currentPos + 1]);
+            }
             tokens.push(new Token(Type.ASSIGN, ':=', currentPos));
             currentPos = currentPos + 2;
             continue;
         }
         //check for function lambda =>
-        if (char === '=' && currentPos + 1 < input.length  && input[currentPos + 1] === '>') {
+        if (char === '=' && currentPos + 1 < input.length) {
+            if (input[currentPos + 1] !== '>') {
+                throw new Error("Invalid token " + char + input[currentPos + 1]);
+            }
             tokens.push(new Token(Type.LAMBDA, '=>', currentPos));
             currentPos = currentPos + 2;
             continue;
@@ -74,7 +86,7 @@ function lex(input) {
         while (currentPos + wordLength <= input.length) {
             //check if the word ends
             const nextChar = input[currentPos + wordLength];
-            if (wordBreaks.includes(nextChar) || currentPos+wordLength === input.length) {
+            if (wordBreaks.includes(nextChar) || currentPos + wordLength === input.length) {
                 tokens.push(new Token(getType(word), word, currentPos));
                 currentPos += wordLength;
                 break;

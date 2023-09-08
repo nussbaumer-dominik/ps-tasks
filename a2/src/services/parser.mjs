@@ -9,8 +9,15 @@ import {Basic, Value, FunctionCall, Assign, FunctionDefinition} from "../models/
  */
 function parse(tokens) {
     const result = [];
+    //remove all comments
+    for (let i = 0; i < tokens.length; i++) {
+        if (tokens[i].type === Type.COMMENT) {
+            tokens.splice(i, 1);
+            i--;
+        }
+    }
     while (tokens.length > 0) {
-        if (tokens[0].type === Type.EOL) {
+        if (tokens[0].type === Type.EOL || tokens[0].type === Type.COMMENT) {
             tokens.shift();
             continue;
         }
@@ -27,7 +34,7 @@ function parse(tokens) {
  */
 function parseBasic(basicTokens) {
     //check for lambda - create basic with assignment
-    if (basicTokens[0].type === Type.ENTITY && basicTokens.length > 1 && basicTokens[1].type === Type.ASSIGN) {
+    if (basicTokens.length > 1 && basicTokens[0].type === Type.ENTITY && basicTokens[1].type === Type.ASSIGN) {
         let name = basicTokens[0].text;
         basicTokens.shift();
         basicTokens.shift();
@@ -107,6 +114,9 @@ function isFunctionDefinition(valueTokens) {
 function getTokensInBrackets(valueTokens) {
     valueTokens.shift(); // =>
     valueTokens.shift(); // {
+    if (valueTokens.length === 0) {
+        throw new Error("Invalid function call");
+    }
     let i = 0;
     let curlyCount = 1;
     //check for closing parenthesis
@@ -131,7 +141,7 @@ function getTokensInBrackets(valueTokens) {
 function parseFunctionDefinition(valueTokens) {
     // Parse names
     valueTokens.shift(); // (
-    //check for closing parenthesis
+    //check for closing parenthesis )
     const names = [];
     while (valueTokens[0].type !== Type.RPAREN) {
         if (valueTokens[0].type === Type.ENTITY) {
@@ -155,6 +165,9 @@ function parseFunctionDefinition(valueTokens) {
  * @returns {Value} - A value
  */
 function parseValue(valueTokens) {
+    if (valueTokens.length === 0) {
+        throw new Error("Invalid value");
+    }
     let basic;
     //check for number
     if (valueTokens[0].type === Type.NUMBER) {
