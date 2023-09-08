@@ -1,5 +1,3 @@
-import {Basic, Value} from "../models/expressionClasses.mjs";
-
 const memory = new Map()
 
 /**
@@ -33,29 +31,27 @@ function findResult(name) {
 
 /**
  * Interprets a basic expression
- * @param basicExpr - A basic expression
- * @param eager
+ * @param basic - A basic expression
+ * @param eager - If eager is true, the expression will be evaluated immediately
  * @returns {*}
  */
-function interpretBasic(basicExpr, eager = false) {
-    let value, assignment = undefined;
-    if (basicExpr instanceof Basic) {
-        value = basicExpr.value;
-        assignment = basicExpr.assignment;
-    }
-    if (basicExpr instanceof Value) {
-        value = basicExpr;
-    }
-
+function interpretBasic(basic, eager = false) {
+    let value = basic.value;
+    let assignment = basic.assignment;
     if (assignment) {
-        interpretAssignment(eager, assignment);
+        interpretAssignment(assignment, eager);
     }
-    if (value) {
+    else if (value) {
         return interpretValue(value, eager);
     }
 }
 
-function interpretAssignment(eager, assignment) {
+/**
+ * Interprets an assignment
+ * @param assignment - An assignment
+ * @param eager - If eager is true, the assignment will be evaluated immediately
+ */
+function interpretAssignment(assignment, eager) {
     if (eager) {
         memory.set(assignment.name, {
             expression: assignment.expr,
@@ -69,24 +65,29 @@ function interpretAssignment(eager, assignment) {
     }
 }
 
-function interpretFunctionCall(value) {
-    const result = findResult(value.functionCall.name)
+/**
+ * Interprets a function call
+ * @param functionCall - A function call
+ * @returns {*} - The result of the function call if it is a builtin function, otherwise the function definition
+ */
+function interpretFunctionCall(functionCall) {
+    const result = findResult(functionCall.name)
     if (result === undefined) {
-        const builtin = builtins[value.functionCall.name];
         //check if it is a builtin function
+        const builtin = builtins[functionCall.name];
         if (builtin) {
-            if (value.functionCall.name === "cond") {
-                return builtin(value.functionCall.values);
+            if (functionCall.name === "cond") {
+                return builtin(functionCall.values);
             }
-            const callValues = value.functionCall.values.map(interpretBasic)
+            const callValues = functionCall.values.map(interpretValue)
             return builtin(callValues)
         } else {
-            throw new Error(`Function ${value.functionCall.name} not found`)
+            throw new Error(`Function ${functionCall.name} not found`)
         }
     } else {
-        //since it's not a builtin function, it must be a function definition
+        //since it's not a builtin function, it must be a custom function defined by the user
         const names = result.names;
-        const values = value.functionCall.values;
+        const values = functionCall.values;
         const expressions = result.expressions;
         for (let i = 0; i < names.length; i++) {
             memory.set(names[i], {
@@ -106,6 +107,12 @@ function interpretFunctionCall(value) {
     }
 }
 
+/**
+ * Interprets a value
+ * @param value - A value
+ * @param eager - If eager is true, the value will be evaluated immediately
+ * @returns {*|undefined} - The result of the value
+ */
 function interpretValue(value, eager) {
     if (value.number !== undefined) {
         return value.number
@@ -120,10 +127,13 @@ function interpretValue(value, eager) {
         return value.functionDefinition;
     }
     if (value.functionCall) {
-        return interpretFunctionCall(value);
+        return interpretFunctionCall(value.functionCall);
     }
 }
 
+/**
+ * A list of builtin functions
+ */
 const builtins = {
     "print": (value) => {
         console.log(value)
@@ -147,11 +157,11 @@ const builtins = {
         })
     },
     "cond": (values) => {
-        const logicResult = interpretBasic(values[0], true)
+        const logicResult = interpretValue(values[0], true)
         if (logicResult === 1) {
-            return interpretBasic(values[1], true)
+            return interpretValue(values[1], true)
         } else {
-            return interpretBasic(values[2], true)
+            return interpretValue(values[2], true)
         }
     },
     "eq": (values) => values[0] === values[1] ? 1 : 0,

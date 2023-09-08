@@ -2,8 +2,8 @@
 <prog> ::= <basic>
     | <basic> <prog>
 
-<basic> ::= <value>
-    | <assignment>
+<basic> ::= <assignment>
+    | <value>
     | <EOL>
 
 <assignment> ::= <name> `:=` <basic>

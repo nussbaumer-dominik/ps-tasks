@@ -9,6 +9,8 @@ import interpret from "./services/interpreter.mjs";
 
 //const filePath = 'demo-code.txt';
 const filePath = 'loop.txt';
+//const filePath = 'avg.txt';
+//const filePath = 'isPrime.txt';
 
 // Create a readable stream from the file
 const fileStream = fs.createReadStream(filePath);
