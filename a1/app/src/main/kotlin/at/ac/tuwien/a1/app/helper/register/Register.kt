@@ -21,3 +21,6 @@ interface Register {
 
 inline fun <reified T : DataEntry> Register.getOfType(position: Char): T = get(position) as? T
     ?: error("Register at $position does not contain the correct type or value")
+
+fun Register.require(position: Char): DataEntry = get(position)
+    ?: error("Nothing stored at register position $position")

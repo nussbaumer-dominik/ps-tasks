@@ -3,12 +3,18 @@ package at.ac.tuwien.a1.app.calculator
 import at.ac.tuwien.a1.app.helper.data.DataEntry
 import at.ac.tuwien.a1.app.helper.data.toFloat
 import at.ac.tuwien.a1.app.helper.mode.OperationMode
+import at.ac.tuwien.a1.app.helper.operations.*
 import at.ac.tuwien.a1.app.helper.register.BaseRegister
 import at.ac.tuwien.a1.app.helper.register.Register
 import at.ac.tuwien.a1.app.helper.register.getOfType
+import at.ac.tuwien.a1.app.helper.register.require
 import at.ac.tuwien.a1.app.helper.stack.BaseDataStack
 import at.ac.tuwien.a1.app.helper.stack.DataStack
 import at.ac.tuwien.a1.app.helper.stack.adjustTopTypedValue
+import at.ac.tuwien.a1.app.helper.stream.BaseStream
+import at.ac.tuwien.a1.app.helper.stream.Command
+import at.ac.tuwien.a1.app.helper.stream.Stream
+import at.ac.tuwien.a1.app.helper.stream.asCommand
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
@@ -26,7 +32,7 @@ class BaseCalculator(
     /**
      * Stream of commands to be executed
      * */
-    private val commandStream: Channel<Command> = Channel(capacity = Channel.UNLIMITED)
+    private val commandStream: Stream = BaseStream()
 
     /**
      * Current operation more of the calculator
@@ -56,13 +62,13 @@ class BaseCalculator(
     override suspend fun start() = withContext(Dispatchers.Default) {
         // Initialize the command stream with contents of register a
         val initialCommandStream = register.getOfType<DataEntry.StringEntry>('a')
-        initialCommandStream.value.forEach { command -> commandStream.send(Command(command)) }
+        initialCommandStream.value.forEach { command -> commandStream.append(command.asCommand()) }
 
         // In parallel consume console input and write it to the input stream
         launch { startConsumingInput() }
 
         // Start consuming the command stream
-        commandStream.consumeEach { command ->
+        commandStream.processCommands { command ->
             command.process()
         }
 
@@ -73,7 +79,7 @@ class BaseCalculator(
         outputStream.consumeEach { output -> callback(output) }
     }
 
-    private fun Command.process() {
+    private suspend fun Command.process() {
         println("Processing command \"$this\" in mode \"$mode\"")
 
         mode = when (val operationMode = mode) {
@@ -84,12 +90,101 @@ class BaseCalculator(
         }
     }
 
-    private fun OperationMode.Executing.execute(command: Command): OperationMode {
-        // TODO
+    private suspend fun OperationMode.Executing.execute(command: Command): OperationMode {
+        if (command.value.isDigit()) {
+            dataStack.push(DataEntry.IntegerEntry(command.value.digitToInt()))
+            return OperationMode.ReadingLeft
+        }
+
+        if (command.value == '.') {
+            dataStack.push(DataEntry.FloatEntry(0f))
+            return OperationMode.ReadingRight(-2)
+        }
+
+        if (command.value == '(') {
+            dataStack.push(DataEntry.StringEntry(""))
+            return OperationMode.ReadingString(1)
+        }
+
+        if (command.value.isRegisterOperation()) {
+            command.value.toRegisterOperation().execute()
+            return OperationMode.Executing
+        }
+
+        if (command.value.isComparisonOperation()) {
+            command.value.toComparisonOperation().execute()
+            return OperationMode.Executing
+        }
+
+        if (command.value == '#') {
+            dataStack.push(DataEntry.IntegerEntry(dataStack.))
+            return OperationMode.Executing
+        }
+
+        if (command.value == '$') {
+            // TODO: Pop from the stack
+            return OperationMode.Executing
+        }
+
+        if (command.value == '@') {
+            if (dataStack.peekNext() !is DataEntry.StringEntry) return OperationMode.Executing
+
+            val newCommands = dataStack.readNext() as DataEntry.StringEntry
+            newCommands.value.forEach { newCommand -> commandStream.insert(newCommand.asCommand()) }
+
+            return OperationMode.Executing
+        }
+
+        if (command.value == '\\') {
+            if (dataStack.peekNext() !is DataEntry.StringEntry) return OperationMode.Executing
+
+            val newCommands = dataStack.readNext() as DataEntry.StringEntry
+            newCommands.value.forEach { newCommand -> commandStream.append(newCommand.asCommand()) }
+
+            return OperationMode.Executing
+        }
+
+        if (command.value == '\'') {
+            val inputLine = inputStream.receive()
+            // TODO: Read in correct format
+            dataStack.push(DataEntry.StringEntry(inputLine))
+            return OperationMode.Executing
+        }
+
+        if (command.value == '"') {
+            // TODO: Format the output correctly
+            outputStream.send(dataStack.readNext().toString())
+            return OperationMode.Executing
+        }
+
         return OperationMode.Executing
     }
 
-    private fun OperationMode.ReadingLeft.execute(command: Command): OperationMode {
+    private fun ComparisonOperation.execute() {
+        val valueOne = dataStack.readNext()
+        val valueTwo = dataStack.readNext()
+        when (this) {
+            ComparisonOperation.EQUALS -> TODO()
+            ComparisonOperation.LESS_THEN -> TODO()
+            ComparisonOperation.MORE_THEN -> TODO()
+        }
+    }
+
+    private fun RegisterOperation.execute() {
+        when (operation) {
+            RegisterOperationRepresentation.GET -> {
+                val valueToPush = register.require(target)
+                dataStack.push(valueToPush)
+            }
+
+            RegisterOperationRepresentation.SAVE -> {
+                val valueToSave = dataStack.readNext()
+                register.put(target.lowercaseChar(), valueToSave)
+            }
+        }
+    }
+
+    private suspend fun OperationMode.ReadingLeft.execute(command: Command): OperationMode {
         if (command.value.isDigit()) {
             dataStack.adjustTopTypedValue<DataEntry.IntegerEntry> { entry ->
                 entry.adjustDigitBy(command.value.digitToInt())
@@ -107,7 +202,7 @@ class BaseCalculator(
         return OperationMode.Executing.execute(command)
     }
 
-    private fun OperationMode.ReadingRight.execute(command: Command): OperationMode {
+    private suspend fun OperationMode.ReadingRight.execute(command: Command): OperationMode {
         if (command.value.isDigit()) {
             dataStack.adjustTopTypedValue<DataEntry.FloatEntry> { entry ->
                 entry.adjustDigitBy(command.value.digitToInt(), value)
@@ -155,6 +250,7 @@ class BaseCalculator(
         }
     }
 
-    @JvmInline
-    private value class Command(val value: Char)
+    companion object {
+        private const val FLOAT_EPSILON = 0.001f
+    }
 }

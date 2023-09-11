@@ -18,6 +18,17 @@ interface DataStack {
     fun readNext(): DataEntry
 
     /**
+     * Looks at the next data value from the stack without consuming it
+     * @throws IllegalStateException when the stack is empty
+     * */
+    fun peekNext(): DataEntry
+
+    /**
+     * Retrieves the number of items currently on the stack
+     * */
+    fun size(): Int
+
+    /**
      * Provides the top value of the stack and overrides it with the returned value
      * */
     fun adjustTopValue(callback: (value: DataEntry) -> DataEntry)
