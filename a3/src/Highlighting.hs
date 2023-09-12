@@ -33,7 +33,7 @@ highlightSyntax textBuffer = do
   return ()
 
 -- | Applies a list of tags to a 'Gtk.TextBuffer'.
-applyTags :: Gtk.TextBuffer -> [(String, String, (Int, Int))] -> IO ()
+applyTags :: Gtk.TextBuffer -> [(StyleTag, String, (Int, Int))] -> IO ()
 applyTags textBuffer tokenPositions = do
   tagTable <- Gtk.textBufferGetTagTable textBuffer
   forM_ tokenPositions $ \(styleName, _, (startPos, endPos)) -> do
@@ -81,8 +81,7 @@ highlightWordOccurrences textBuffer word = do
     let matches = map (\(start, len) -> (start, start + len)) $ getAllMatches $ T.unpack text =~ regexPattern :: [(Int, Int)]
     putStrLn $ show matches
     tagTable <- Gtk.textBufferGetTagTable textBuffer
-    tag <- getTag tagTable "word-highlight"
-
+    tag <- getTag tagTable WordHighlight
     forM_ matches $ \(startPos, endPos) -> do
       sIter <- getIterAtOffset textBuffer startPos
       eIter <- getIterAtOffset textBuffer endPos
@@ -120,8 +119,8 @@ highlightMatchingBracket textBuffer iter = do
           matchingBracketEndIter <- Gtk.textIterCopy matchingIter
           _ <- Gtk.textIterForwardChar matchingBracketEndIter
 
-          highlightIter textBuffer startingBracketIter startingBracketEndIter "bracket-highlight"
-          highlightIter textBuffer matchingIter matchingBracketEndIter "bracket-highlight"
+          highlightIter textBuffer startingBracketIter startingBracketEndIter BracketHighlight
+          highlightIter textBuffer matchingIter matchingBracketEndIter BracketHighlight
         Nothing -> return ()
     Nothing -> return ()
 
@@ -162,7 +161,7 @@ findBracket iter startingBracket targetBracket nesting direction = do
 
 -- | Identifies positions of unbalanced brackets in a given text.
 -- Returns a list of unbalanced brackets and their positions.
-getUnbalancedBrackets :: T.Text -> [(String, String, (Int, Int))]
+getUnbalancedBrackets :: T.Text -> [(StyleTag, String, (Int, Int))]
 getUnbalancedBrackets text = checkBalance (T.unpack text) 0 [] []
 
 -- | Recursively checks the balance of brackets in a string.
@@ -173,14 +172,14 @@ getUnbalancedBrackets text = checkBalance (T.unpack text) 0 [] []
 -- * A list of positions of unbalanced brackets found so far.
 --
 -- Returns a list of unbalanced brackets and their positions.
-checkBalance :: String -> Int -> [(Char, Int)] -> [(String, String, (Int, Int))] -> [(String, String, (Int, Int))]
+checkBalance :: String -> Int -> [(Char, Int)] -> [(StyleTag, String, (Int, Int))] -> [(StyleTag, String, (Int, Int))]
 checkBalance [] _ [] positions = positions
 checkBalance [] _ stack positions =
-  positions ++ map (\(bracket, index) -> ("unmatched-bracket", [bracket], (index, index + 1))) stack
+  positions ++ map (\(bracket, index) -> (UnmatchedBracket, [bracket], (index, index + 1))) stack
 checkBalance (x : xs) index stack positions
   | x `elem` ("([{" :: String) = checkBalance xs (index + 1) ((x, index) : stack) positions
   | x `elem` (")]}" :: String) && not (null stack) && isMatching (fst $ head stack) x = checkBalance xs (index + 1) (tail stack) positions
-  | x `elem` (")]}" :: String) && (null stack || not (isMatching (fst $ head stack) x)) = checkBalance xs (index + 1) stack (("unmatched-bracket", [x], (index, index + 1)) : positions)
+  | x `elem` (")]}" :: String) && (null stack || not (isMatching (fst $ head stack) x)) = checkBalance xs (index + 1) stack ((UnmatchedBracket, [x], (index, index + 1)) : positions)
   | otherwise = checkBalance xs (index + 1) stack positions
 
 -- | Checks if two brackets are matching pairs.
@@ -200,10 +199,10 @@ isMatching _ _ = False
 -- * The start iterator of the range to highlight.
 -- * The end iterator of the range to highlight.
 -- * The name of the tag to apply.
-highlightIter :: Gtk.TextBuffer -> Gtk.TextIter -> Gtk.TextIter -> T.Text -> IO ()
+highlightIter :: Gtk.TextBuffer -> Gtk.TextIter -> Gtk.TextIter -> StyleTag -> IO ()
 highlightIter textBuffer start end tagName = do
   tagTable <- Gtk.textBufferGetTagTable textBuffer
-  tag <- getTag tagTable (T.unpack tagName)
+  tag <- getTag tagTable tagName
   Gtk.textBufferApplyTag textBuffer tag start end
 
 -- | Retrieves positions of tokens in a text based on a list of syntax rules.
@@ -218,7 +217,7 @@ highlightIter textBuffer start end tagName = do
 -- * A list of syntax rules to apply.
 --
 -- Returns a list of identified tokens and their positions.
-getTokenPositions :: T.Text -> [SyntaxRule] -> [(String, String, (Int, Int))]
+getTokenPositions :: T.Text -> [SyntaxRule] -> [(StyleTag, String, (Int, Int))]
 getTokenPositions text rules =
   concatMap (\rule -> findMatches text rule) rules
 
@@ -234,7 +233,7 @@ getTokenPositions text rules =
 -- * The syntax rule to apply.
 --
 -- Returns a list of identified tokens and their positions based on the syntax rule.
-findMatches :: T.Text -> SyntaxRule -> [(String, String, (Int, Int))]
+findMatches :: T.Text -> SyntaxRule -> [(StyleTag, String, (Int, Int))]
 findMatches t rule =
   let matches = getAllTextMatches $ (T.unpack t) =~ T.unpack (pattern rule) :: [String]
       positions = getAllMatches $ T.unpack t =~ T.unpack (pattern rule) :: [(Int, Int)]
@@ -248,9 +247,9 @@ findMatches t rule =
 -- * The name of the style (used as the tag name).
 --
 -- Returns the found or newly created 'Gtk.TextTag'.
-getTag :: Gtk.TextTagTable -> String -> IO (Gtk.TextTag)
+getTag :: Gtk.TextTagTable -> StyleTag -> IO (Gtk.TextTag)
 getTag tagTable styleName = do
-  let tagName = T.pack styleName
+  let tagName = T.pack $ show styleName
   mTag <- Gtk.textTagTableLookup tagTable tagName
   case mTag of
     Nothing -> do

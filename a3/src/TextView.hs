@@ -19,6 +19,7 @@ import Highlighting
     highlightWordOccurrences,
     isBracket,
   )
+import Syntax (StyleTag (..))
 
 -- | Create a new TextView with a given TextBuffer
 -- This function creates a 'Gtk.TextView', attaches the given 'Gtk.TextBuffer'
@@ -98,8 +99,8 @@ adjustIters _ _ _ _ _ = return ()
 removeHighlighting :: Gtk.TextBuffer -> IO ()
 removeHighlighting buffer = do
   (start, end) <- getBufferBounds buffer
-  Gtk.textBufferRemoveTagByName buffer "word-highlight" start end
-  Gtk.textBufferRemoveTagByName buffer "bracket-highlight" start end
+  Gtk.textBufferRemoveTagByName buffer (T.pack $ show WordHighlight) start end
+  Gtk.textBufferRemoveTagByName buffer (T.pack $ show BracketHighlight) start end
 
 -- | Create a new 'Gtk.TextView' that holds the line numbers for a given 'Gtk.TextBuffer'
 createTextViewWithNumbers :: Gtk.TextBuffer -> IO Gtk.TextView
