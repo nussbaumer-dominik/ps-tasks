@@ -10,13 +10,13 @@ import Control.Monad (forM_)
 import qualified Data.Text as T
 import qualified GI.Gtk as Gtk
 import Syntax (StyleTag (..))
-import SyntaxCore
+import SyntaxCore (Highlight (..), Range (..))
 
 -- | Takes a Gtk.TextBuffer and a list of Highlights, and applies the corresponding tags to the buffer.
 applyHighlightsToBuffer :: Gtk.TextBuffer -> [Highlight] -> IO ()
 applyHighlightsToBuffer textBuffer highlights = do
   tagTable <- Gtk.textBufferGetTagTable textBuffer
-  forM_ highlights $ \(Highlight style (start, end)) -> do
+  forM_ highlights $ \(Highlight style (Range (start, end))) -> do
     tag <- getTag tagTable style
     sIter <- getIterAtOffset textBuffer start
     eIter <- getIterAtOffset textBuffer end
