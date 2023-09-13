@@ -1,4 +1,4 @@
-package at.ac.tuwien.a1.app.helper.stack
+package at.ac.tuwien.a1.app.helper.data.stack
 
 import at.ac.tuwien.a1.app.helper.data.DataEntry
 
@@ -24,6 +24,18 @@ interface DataStack {
     fun peekNext(): DataEntry
 
     /**
+     * Looks at the nth data value from the stack without consuming it
+     * @throws IllegalStateException when n is out of range
+     * */
+    fun peekNth(n: Int): DataEntry
+
+    /**
+     * Removes the nth data value from the stack
+     * @throws IllegalStateException when n is out of range
+     * */
+    fun removeNth(n: Int): DataEntry
+
+    /**
      * Retrieves the number of items currently on the stack
      * */
     fun size(): Int
@@ -32,11 +44,15 @@ interface DataStack {
      * Provides the top value of the stack and overrides it with the returned value
      * */
     fun adjustTopValue(callback: (value: DataEntry) -> DataEntry)
+
+    /**
+     * Output the contents of the registers for debug purpose
+     * */
+    fun debug()
 }
 
-inline fun <reified T : DataEntry> DataStack.adjustTopTypedValue(crossinline callback: (value: T) -> DataEntry) {
-    adjustTopValue { value ->
-        if (value !is T) error("Top data stack entry is not of the correct type")
-        callback(value)
-    }
-}
+fun DataStack.peekNthOrNull(n: Int): DataEntry? =
+    runCatching { peekNth(n) }.getOrNull()
+
+fun DataStack.removeNthOrNull(n: Int): DataEntry? =
+    runCatching { removeNth(n) }.getOrNull()

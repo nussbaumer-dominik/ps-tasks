@@ -1,4 +1,6 @@
-package at.ac.tuwien.a1.app.helper.stream
+package at.ac.tuwien.a1.app.helper.data.stream
+
+import at.ac.tuwien.a1.app.helper.data.Command
 
 /**
  * Base interface representing a stream holding commands to be executed by the calculator
@@ -17,11 +19,10 @@ interface Stream {
     /**
      * Dispatched the commands in the correct order to be processed
      * */
-    fun processCommands(callback: suspend (command: Command) -> Unit)
+    suspend fun processCommands(callback: suspend (command: Command) -> Unit)
+
+    /**
+     * Output the contents of the stream for debug purpose
+     * */
+    fun debug()
 }
-
-@JvmInline
-value class Command(val value: Char)
-
-fun Char.asCommand(): Command =
-    Command(this)

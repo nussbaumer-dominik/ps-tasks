@@ -1,4 +1,4 @@
-package at.ac.tuwien.a1.app.helper.register
+package at.ac.tuwien.a1.app.helper.data.register
 
 import at.ac.tuwien.a1.app.helper.data.DataEntry
 
@@ -8,7 +8,7 @@ import at.ac.tuwien.a1.app.helper.data.DataEntry
 class BaseRegister(
     initialValues: Map<Char, DataEntry> = emptyMap(),
 ) : Register {
-    private val registerData: MutableMap<Char, DataEntry> = mutableMapOf()
+    private val data: MutableMap<Char, DataEntry> = mutableMapOf()
 
     init {
         // Initialize the registers with the provided values
@@ -17,12 +17,16 @@ class BaseRegister(
 
     override fun get(position: Char): DataEntry? {
         checkPosition(position)
-        return registerData[position.lowercaseChar()]
+        return data[position.lowercaseChar()]
     }
 
     override fun put(position: Char, data: DataEntry) {
         checkPosition(position)
-        registerData[position.lowercaseChar()] = data
+        this.data[position.lowercaseChar()] = data
+    }
+
+    override fun debug() {
+        println("Register contents: $data")
     }
 
     private fun checkPosition(position: Char) {

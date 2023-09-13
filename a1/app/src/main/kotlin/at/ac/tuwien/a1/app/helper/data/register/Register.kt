@@ -1,4 +1,4 @@
-package at.ac.tuwien.a1.app.helper.register
+package at.ac.tuwien.a1.app.helper.data.register
 
 import at.ac.tuwien.a1.app.helper.data.DataEntry
 
@@ -17,10 +17,12 @@ interface Register {
      * @throws IllegalStateException when the position is not a valid register
      * */
     fun put(position: Char, data: DataEntry)
-}
 
-inline fun <reified T : DataEntry> Register.getOfType(position: Char): T = get(position) as? T
-    ?: error("Register at $position does not contain the correct type or value")
+    /**
+     * Output the contents of the stack for debug purpose
+     * */
+    fun debug()
+}
 
 fun Register.require(position: Char): DataEntry = get(position)
     ?: error("Nothing stored at register position $position")
