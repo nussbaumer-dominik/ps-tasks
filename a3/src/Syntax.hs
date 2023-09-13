@@ -25,6 +25,12 @@ keywords = ["plus", "minus", "mult", "div", "cont", "each"]
 keywordsPattern :: T.Text
 keywordsPattern = T.concat ["(?<!\\w)(", T.intercalate "|" keywords, ")(?!\\w)"]
 
+signs :: [T.Text]
+signs = ["=", ":", ">"]
+
+signPattern :: T.Text
+signPattern = T.concat ["(", T.intercalate "|" signs, ")"]
+
 variablePattern :: T.Text
 variablePattern = T.concat ["(?<!\\w)(?!(?:", keywordsPattern, "))(\\w+)(?!\\[\\(\\{\\w])"]
 
@@ -37,12 +43,13 @@ commentPattern = "#[^\n]*$" -- everything after "#" until end of line
 syntaxRules :: [SyntaxRule]
 syntaxRules =
   [ SyntaxRule keywordsPattern Keyword,
+    SyntaxRule signPattern Sign,
     SyntaxRule valuePattern Value,
     SyntaxRule variablePattern Variable,
     SyntaxRule commentPattern Comment
   ]
 
-data StyleTag = Keyword | Value | Variable | Comment | WordHighlight | BracketHighlight | UnmatchedBracket
+data StyleTag = Keyword | Sign | Value | Variable | Comment | WordHighlight | BracketHighlight | UnmatchedBracket
   deriving (Show)
 
 data StyleType = Foreground | Background
@@ -50,6 +57,7 @@ data StyleType = Foreground | Background
 initTagTable :: Gtk.TextTagTable -> IO ()
 initTagTable tagTable = do
   _ <- createAndAddTag Keyword 0 51 179 1 Foreground tagTable
+  _ <- createAndAddTag Sign 150 61 239 1 Foreground tagTable
   _ <- createAndAddTag Variable 0 0 0 1 Foreground tagTable
   _ <- createAndAddTag Value 42 172 184 1 Foreground tagTable
   _ <- createAndAddTag Comment 140 140 140 1 Foreground tagTable

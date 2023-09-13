@@ -85,6 +85,13 @@ identifyWord cursor = do
   adjustIters startsWord insideWord endsWord startWordIter endWordIter
   Gtk.textIterGetText startWordIter endWordIter
 
+-- | Adjust the given 'Gtk.TextIter's to the beginning and end of the current word
+-- Arguments:
+-- * 'Bool' - Whether the cursor is at the beginning of a word
+-- * 'Bool' - Whether the cursor is inside a word
+-- * 'Bool' - Whether the cursor is at the end of a word
+-- * 'Gtk.TextIter' - The 'Gtk.TextIter' to adjust to the beginning of the word
+-- * 'Gtk.TextIter' - The 'Gtk.TextIter' to adjust to the end of the word
 adjustIters :: Bool -> Bool -> Bool -> Gtk.TextIter -> Gtk.TextIter -> IO ()
 adjustIters True _ _ _ end = void $ Gtk.textIterForwardWordEnd end
 adjustIters _ True _ start end = do
