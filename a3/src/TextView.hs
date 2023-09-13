@@ -3,7 +3,7 @@
 
 module TextView (createTextView, createTextViewWithNumbers) where
 
-import Control.Monad (when)
+import Control.Monad (unless, when)
 import Data.Char (isLetter)
 import qualified Data.Text as T
 import qualified GI.Gtk as Gtk
@@ -77,18 +77,20 @@ handleMarkSet textBuffer iter mark = do
   markName <- Gtk.textMarkGetName mark
   when (markName == Just "insert") $ do
     removeHighlighting textBuffer
-
     entireText <- getTextFromBuffer textBuffer
     cursorPos <- fromIntegral <$> Gtk.textIterGetOffset iter
 
     -- Highlight word occurrences
     let wordToHighlight = identifyWord entireText cursorPos
-    let highlights = highlightWordOccurrences entireText wordToHighlight
-    applyHighlightsToBuffer textBuffer highlights
+    unless (T.null wordToHighlight) $ do
+      let wordCount = T.count wordToHighlight entireText
+      when (wordCount > 1) $ do
+        let highlights = highlightWordOccurrences entireText wordToHighlight
+        applyHighlightsToBuffer textBuffer highlights
 
     -- Highlight matching brackets
     case highlightMatchingBracket entireText cursorPos of
-      Just (currentBracketHighlight, matchingBracketHighlight) -> do
+      Just (currentBracketHighlight, matchingBracketHighlight) ->
         applyHighlightsToBuffer textBuffer [currentBracketHighlight, matchingBracketHighlight]
       Nothing -> return ()
 
@@ -96,14 +98,9 @@ handleMarkSet textBuffer iter mark = do
 identifyWord :: T.Text -> Int -> T.Text
 identifyWord text pos
   | T.null text = T.empty
-  | otherwise = T.takeWhile isLetter rightPart `T.append` T.reverse (T.takeWhile isWordCharacter (T.reverse leftPart))
+  | otherwise = T.reverse (T.takeWhile isLetter (T.reverse beginning)) `T.append` T.takeWhile isLetter remainder
   where
-    (leftPart, rightPart) = T.splitAt pos text
-
--- | Determines if a character can be part of a word.
--- Here, a word is defined as a sequence of alphanumeric characters or underscores.
-isWordCharacter :: Char -> Bool
-isWordCharacter ch = ch `elem` ['a' .. 'z'] || ch `elem` ['A' .. 'Z']
+    (beginning, remainder) = T.splitAt pos text
 
 -- | Remove two highlighting tags from a given 'Gtk.TextBuffer', namely:
 -- * WordHighlight - The tag that highlights all occurrences of a word at the cursor position
