@@ -30,6 +30,7 @@ library
       Highlighting
       Menu
       Syntax
+      SyntaxCore
       TextEditor
       TextView
   other-modules:
