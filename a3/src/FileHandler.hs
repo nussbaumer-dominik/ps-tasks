@@ -1,11 +1,12 @@
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module FileHandler (openFile) where
+module FileHandler (openFile, saveFile) where
 
 import Data.GI.Base
 import qualified Data.Text.IO as TIO
 import qualified GI.Gtk as Gtk
+import GtkHelpers (getTextFromBuffer)
 
 -- | Opens a file using a file chooser dialog and loads its content into a 'Gtk.TextBuffer'.
 --
@@ -30,3 +31,9 @@ openFile win textBuffer = do
       Gtk.textBufferSetText textBuffer fileContent (-1)
       Gtk.widgetHide dialog
     _ -> Gtk.widgetHide dialog
+
+-- | Save given file content to file
+saveFile :: Gtk.TextBuffer -> FilePath -> IO ()
+saveFile textBuffer filename = do
+  text <- getTextFromBuffer textBuffer
+  TIO.writeFile filename text

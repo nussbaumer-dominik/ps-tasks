@@ -4,9 +4,8 @@
 module Menu (createMenuBar) where
 
 import Data.GI.Base
-import FileHandler (openFile)
+import FileHandler (openFile, saveFile)
 import qualified GI.Gtk as Gtk
-import TextView (saveFile)
 
 -- | Create the menu bar.
 createMenuBar :: Gtk.Window -> Gtk.TextBuffer -> FilePath -> IO Gtk.MenuBar

@@ -1,11 +1,13 @@
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module TextView where
+module TextView (createTextView, createTextViewWithNumbers) where
 
+import Control.Monad (when)
+import Data.Char (isLetter)
 import qualified Data.Text as T
-import qualified Data.Text.IO as TIO
 import qualified GI.Gtk as Gtk
+import GtkHelpers (getTextFromBuffer)
 import Highlighting
 import Syntax (StyleTag (..))
 import SyntaxCore
@@ -27,7 +29,7 @@ createTextView textBuffer = do
   refreshSyntaxHighlighting textBuffer
   _ <- Gtk.on textBuffer #changed (refreshSyntaxHighlighting textBuffer)
 
-  --_ <- Gtk.on textBuffer #markSet (handleMarkSet textBuffer)
+  _ <- Gtk.on textBuffer #markSet (handleMarkSet textBuffer)
 
   return textview
 
@@ -60,41 +62,54 @@ updateLineNumbers mainBuffer lineNumberBuffer = do
 
 refreshSyntaxHighlighting :: Gtk.TextBuffer -> IO ()
 refreshSyntaxHighlighting textBuffer = do
+  removeAllHighlights textBuffer
   text <- getTextFromBuffer textBuffer
   let highlights = highlightSyntax text
   applyHighlightsToBuffer textBuffer highlights
 
+removeAllHighlights :: Gtk.TextBuffer -> IO ()
+removeAllHighlights buffer = do
+  (start, end) <- getBufferBounds buffer
+  Gtk.textBufferRemoveAllTags buffer start end
+
+handleMarkSet :: Gtk.TextBuffer -> Gtk.TextIter -> Gtk.TextMark -> IO ()
+handleMarkSet textBuffer iter mark = do
+  markName <- Gtk.textMarkGetName mark
+  when (markName == Just "insert") $ do
+    removeHighlighting textBuffer
+
+    entireText <- getTextFromBuffer textBuffer
+    cursorPos <- fromIntegral <$> Gtk.textIterGetOffset iter
+
+    -- Highlight word occurrences
+    let wordToHighlight = identifyWord entireText cursorPos
+    let highlights = highlightWordOccurrences entireText wordToHighlight
+    applyHighlightsToBuffer textBuffer highlights
+
+    -- Highlight matching brackets
+    case highlightMatchingBracket entireText cursorPos of
+      Just (currentBracketHighlight, matchingBracketHighlight) -> do
+        applyHighlightsToBuffer textBuffer [currentBracketHighlight, matchingBracketHighlight]
+      Nothing -> return ()
+
+-- | Identifies the word at the given position in a text.
+identifyWord :: T.Text -> Int -> T.Text
+identifyWord text pos
+  | T.null text = T.empty
+  | otherwise = T.takeWhile isLetter rightPart `T.append` T.reverse (T.takeWhile isWordCharacter (T.reverse leftPart))
+  where
+    (leftPart, rightPart) = T.splitAt pos text
+
+-- | Determines if a character can be part of a word.
+-- Here, a word is defined as a sequence of alphanumeric characters or underscores.
+isWordCharacter :: Char -> Bool
+isWordCharacter ch = ch `elem` ['a' .. 'z'] || ch `elem` ['A' .. 'Z']
+
 -- | Remove two highlighting tags from a given 'Gtk.TextBuffer', namely:
--- * 'word-highlight' - The tag that highlights all occurrences of a word at the cursor position
--- * 'bracket-highlight' - The tag that highlights the matching bracket of the cursor
+-- * WordHighlight - The tag that highlights all occurrences of a word at the cursor position
+-- * BracketHighlight - The tag that highlights the matching bracket of the cursor
 removeHighlighting :: Gtk.TextBuffer -> IO ()
 removeHighlighting buffer = do
   (start, end) <- getBufferBounds buffer
   Gtk.textBufferRemoveTagByName buffer (T.pack $ show WordHighlight) start end
   Gtk.textBufferRemoveTagByName buffer (T.pack $ show BracketHighlight) start end
-
--- And similar procedures for word occurrences or bracket matching:
-highlightWord :: Gtk.TextBuffer -> T.Text -> IO ()
-highlightWord textBuffer word = do
-  text <- getTextFromBuffer textBuffer
-  let highlights = highlightWordOccurrences text word
-  applyHighlightsToBuffer textBuffer highlights
-
-highlightBracketAtPos :: Gtk.TextBuffer -> Int -> IO ()
-highlightBracketAtPos textBuffer pos = do
-  text <- getTextFromBuffer textBuffer
-  case highlightMatchingBracket text pos of
-    Just (h1, h2) -> applyHighlightsToBuffer textBuffer [h1, h2]
-    Nothing -> return ()
-
--- | Save given file content to file
-saveFile :: Gtk.TextBuffer -> FilePath -> IO ()
-saveFile textBuffer filename = do
-  text <- getTextFromBuffer textBuffer
-  TIO.writeFile filename text
-
-getTextFromBuffer :: Gtk.TextBuffer -> IO T.Text
-getTextFromBuffer textBuffer = do
-  startIter <- Gtk.textBufferGetStartIter textBuffer
-  endIter <- Gtk.textBufferGetEndIter textBuffer
-  Gtk.textBufferGetText textBuffer startIter endIter False

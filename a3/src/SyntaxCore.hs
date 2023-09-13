@@ -46,7 +46,11 @@ highlightMatchingBracket text pos =
         Just (startingBracket, targetBracket, direction) ->
           let maybeMatchingOffset = findMatchingBracket text pos startingBracket targetBracket 1 direction
            in case maybeMatchingOffset of
-                Just matchingOffset -> Just (Highlight BracketHighlight (Range (pos, (pos + 1))), Highlight BracketHighlight (Range (matchingOffset, (matchingOffset + 1))))
+                Just matchingOffset ->
+                  Just
+                    ( Highlight BracketHighlight (Range (pos, (pos + 1))),
+                      Highlight BracketHighlight (Range (matchingOffset, (matchingOffset + 1)))
+                    )
                 Nothing -> Nothing
         Nothing -> Nothing
 
