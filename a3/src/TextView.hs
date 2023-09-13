@@ -82,17 +82,12 @@ handleMarkSet textBuffer iter mark = do
 
     -- Highlight word occurrences
     let wordToHighlight = identifyWord entireText cursorPos
-    unless (T.null wordToHighlight) $ do
-      let wordCount = T.count wordToHighlight entireText
-      when (wordCount > 1) $ do
-        let highlights = highlightWordOccurrences entireText wordToHighlight
-        applyHighlightsToBuffer textBuffer highlights
+    unless (T.null wordToHighlight) $
+      when (T.count wordToHighlight entireText > 1) $
+        applyHighlightsToBuffer textBuffer (highlightWordOccurrences entireText wordToHighlight)
 
     -- Highlight matching brackets
-    case highlightMatchingBracket entireText cursorPos of
-      Just (currentBracketHighlight, matchingBracketHighlight) ->
-        applyHighlightsToBuffer textBuffer [currentBracketHighlight, matchingBracketHighlight]
-      Nothing -> return ()
+    mapM_ (applyHighlightsToBuffer textBuffer) (highlightMatchingBracket entireText cursorPos)
 
 -- | Identifies the word at the given position in a text.
 identifyWord :: T.Text -> Int -> T.Text

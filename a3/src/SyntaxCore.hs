@@ -10,6 +10,7 @@ module SyntaxCore
   )
 where
 
+import Data.Maybe (fromJust, isJust)
 import qualified Data.Text as T
 import Syntax (StyleTag (..), SyntaxRule (..), syntaxRules)
 import Text.Regex.PCRE
@@ -39,20 +40,30 @@ highlightWordOccurrences text word =
    in [Highlight WordHighlight match' | match' <- matches]
 
 -- | Highlight the matching bracket in the text.
-highlightMatchingBracket :: T.Text -> Int -> Maybe (Highlight, Highlight)
+highlightMatchingBracket :: T.Text -> Int -> Maybe [Highlight]
 highlightMatchingBracket text pos =
-  let char = T.index text pos
-   in case getBracketDirection char of
+  let charAtCursor = indexSafe text pos
+      charBeforeCursor = indexSafe text (pos - 1)
+      (actualChar, actualPos) =
+        if isJust charAtCursor && isBracket (fromJust charAtCursor)
+          then (charAtCursor, pos)
+          else (charBeforeCursor, pos - 1)
+   in case actualChar >>= getBracketDirection of
         Just (startingBracket, targetBracket, direction) ->
-          let maybeMatchingOffset = findMatchingBracket text pos startingBracket targetBracket 1 direction
+          let maybeMatchingOffset = findMatchingBracket text actualPos startingBracket targetBracket direction
            in case maybeMatchingOffset of
                 Just matchingOffset ->
                   Just
-                    ( Highlight BracketHighlight (Range (pos, (pos + 1))),
-                      Highlight BracketHighlight (Range (matchingOffset, (matchingOffset + 1)))
-                    )
+                    [ Highlight BracketHighlight (Range (actualPos, actualPos + 1)),
+                      Highlight BracketHighlight (Range (matchingOffset, matchingOffset + 1))
+                    ]
                 Nothing -> Nothing
         Nothing -> Nothing
+
+indexSafe :: T.Text -> Int -> Maybe Char
+indexSafe text idx
+  | idx < 0 || idx >= T.length text = Nothing
+  | otherwise = Just (T.index text idx)
 
 -- | Check if a character is a bracket.
 isBracket :: Char -> Bool
@@ -85,21 +96,26 @@ checkBalance (x : xs) index stack positions
     checkBalance xs (index + 1) stack (Range (index, index + 1) : positions)
   | otherwise = checkBalance xs (index + 1) stack positions
 
-findMatchingBracket :: T.Text -> Int -> Char -> Char -> Int -> Direction -> Maybe Int
-findMatchingBracket text currentIndex startingBracket targetBracket nesting direction
+findMatchingBracket :: T.Text -> Int -> Char -> Char -> Direction -> Maybe Int
+findMatchingBracket text currentIndex startingBracket targetBracket direction =
+  let nextIndex = case direction of
+        Forward -> currentIndex + 1
+        Backward -> currentIndex - 1
+   in findMatchingBracketHelper text nextIndex startingBracket targetBracket 1 direction
+
+findMatchingBracketHelper :: T.Text -> Int -> Char -> Char -> Int -> Direction -> Maybe Int
+findMatchingBracketHelper text currentIndex startingBracket targetBracket nesting direction
   | currentIndex < 0 || currentIndex >= T.length text = Nothing
-  | currentChar == targetBracket && adjustedNesting == 0 = Just currentIndex
-  | adjustedNesting < 0 = Nothing
-  | otherwise = findMatchingBracket text nextIndex startingBracket targetBracket adjustedNesting direction
+  | currentChar == targetBracket && nesting == 1 = Just currentIndex
+  | currentChar == targetBracket = continueSearch (nesting - 1)
+  | currentChar == startingBracket = continueSearch (nesting + 1)
+  | otherwise = continueSearch nesting
   where
     currentChar = T.index text currentIndex
     nextIndex = case direction of
       Forward -> currentIndex + 1
       Backward -> currentIndex - 1
-    adjustedNesting
-      | currentChar == targetBracket = nesting - 1
-      | currentChar == startingBracket = nesting + 1
-      | otherwise = nesting
+    continueSearch adjustedNesting = findMatchingBracketHelper text nextIndex startingBracket targetBracket adjustedNesting direction
 
 isMatching :: Char -> Char -> Bool
 isMatching '(' ')' = True
