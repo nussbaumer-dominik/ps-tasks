@@ -51,8 +51,12 @@ fun ApplyStringOperation.execute(dataStack: DataStack, stream: Stream) {
         return
     }
 
-    nextValue.value
-        .reversed()
+    val commands = when (this) {
+        ApplyStringOperation.Immediately -> nextValue.value.reversed()
+        ApplyStringOperation.Later -> nextValue.value
+    }
+
+    commands
         .map(Char::asCommand)
         .forEach { command ->
             when (this) {
