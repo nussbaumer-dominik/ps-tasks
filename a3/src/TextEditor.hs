@@ -11,7 +11,12 @@ import TextView (createTextView, createTextViewWithNumbers)
 -- | Create a new TextView with a given TextBuffer
 -- This function creates a 'Gtk.TextView', attaches the given 'Gtk.TextBuffer'
 -- and also shows the line numbers
-openEditor :: Gtk.Window -> Gtk.Box -> Gtk.TextBuffer -> FilePath -> IO ()
+openEditor
+  :: Gtk.Window     -- ^ The window to add the editor to
+  -> Gtk.Box        -- ^ The grid to add the editor to
+  -> Gtk.TextBuffer -- ^ The text buffer to attach to the editor
+  -> FilePath       -- ^ The filename of the file to open
+  -> IO ()          -- ^ Returns nothing
 openEditor win grid textBuffer filename = do
   menubar <- createMenuBar win textBuffer filename
   Gtk.containerAdd grid menubar

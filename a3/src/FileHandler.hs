@@ -13,11 +13,10 @@ import GtkHelpers (getTextFromBuffer)
 -- This function presents a file chooser dialog to the user. If the user selects a file
 -- and clicks "Open", the content of the file is read and loaded into the provided 'Gtk.TextBuffer'.
 -- If the user clicks "Cancel" or closes the dialog, no action is taken.
---
--- Arguments:
--- * The parent 'Gtk.Window' for the file chooser dialog.
--- * The 'Gtk.TextBuffer' where the file content should be loaded.
-openFile :: Gtk.Window -> Gtk.TextBuffer -> IO ()
+openFile 
+  :: Gtk.Window     -- ^ The parent 'Gtk.Window' for the file chooser dialog.
+  -> Gtk.TextBuffer -- ^ The 'Gtk.TextBuffer' where the file content should be loaded.
+  -> IO ()          -- ^ Returns nothing.
 openFile win textBuffer = do
   dialog <- Gtk.new Gtk.FileChooserDialog [#title := "Open File", #action := Gtk.FileChooserActionOpen]
   _ <- Gtk.dialogAddButton dialog "Cancel" (fromIntegral $ fromEnum Gtk.ResponseTypeCancel)
@@ -33,7 +32,10 @@ openFile win textBuffer = do
     _ -> Gtk.widgetHide dialog
 
 -- | Save given file content to file
-saveFile :: Gtk.TextBuffer -> FilePath -> IO ()
+saveFile 
+  :: Gtk.TextBuffer -- ^ The 'Gtk.TextBuffer' where the file content is stored 
+  -> FilePath       -- ^ The 'FilePath' where the file should be saved to
+  -> IO ()          -- ^ Returns nothing.
 saveFile textBuffer filename = do
   text <- getTextFromBuffer textBuffer
   TIO.writeFile filename text

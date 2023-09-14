@@ -13,5 +13,6 @@ extra-deps:
   - void-0.7.3
   - gi-pango-1.0.29
   - gi-gdk-3.0.28
+  - haddock-api-2.27.0
 
 allow-newer: true

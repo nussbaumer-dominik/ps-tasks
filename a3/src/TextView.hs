@@ -17,7 +17,9 @@ import SyntaxCore
 -- and also attaches two event handlers to it, namely
 -- * 'highlightSyntax' to highlight the syntax of the text on every change
 -- * 'handleMarkSet' to highlight the matching bracket on every cursor movement
-createTextView :: Gtk.TextBuffer -> IO Gtk.TextView
+createTextView
+  :: Gtk.TextBuffer -- ^ The 'Gtk.TextBuffer' to be attached to the 'Gtk.TextView'
+  -> IO Gtk.TextView -- ^ Returns the created 'Gtk.TextView'
 createTextView textBuffer = do
   textview <-
     Gtk.new
@@ -34,7 +36,9 @@ createTextView textBuffer = do
   return textview
 
 -- | Create a new 'Gtk.TextView' that holds the line numbers for a given 'Gtk.TextBuffer'
-createTextViewWithNumbers :: Gtk.TextBuffer -> IO Gtk.TextView
+createTextViewWithNumbers
+  :: Gtk.TextBuffer   -- ^ The 'Gtk.TextBuffer' to be attached to the 'Gtk.TextView'
+  -> IO Gtk.TextView  -- ^ Returns the created 'Gtk.TextView'
 createTextViewWithNumbers textBuffer = do
   lineNumberBuffer <- Gtk.new Gtk.TextBuffer []
   lineNumberView <-
@@ -54,25 +58,39 @@ createTextViewWithNumbers textBuffer = do
   return lineNumberView
 
 -- | Update the line numbers of a given 'Gtk.TextBuffer'
-updateLineNumbers :: Gtk.TextBuffer -> Gtk.TextBuffer -> IO ()
+updateLineNumbers
+  :: Gtk.TextBuffer -- ^ The 'Gtk.TextBuffer' to be attached to the 'Gtk.TextView'
+  -> Gtk.TextBuffer -- ^ The 'Gtk.TextBuffer' that holds the line numbers
+  -> IO ()          -- ^ Returns nothing
 updateLineNumbers mainBuffer lineNumberBuffer = do
   totalLines <- Gtk.textBufferGetLineCount mainBuffer
   let lineNumbers = T.unlines . map T.pack $ show <$> [1 .. totalLines]
   Gtk.textBufferSetText lineNumberBuffer lineNumbers (-1)
 
-refreshSyntaxHighlighting :: Gtk.TextBuffer -> IO ()
+-- | Refresh the syntax highlighting of a given 'Gtk.TextBuffer'
+refreshSyntaxHighlighting
+  :: Gtk.TextBuffer -- ^ The 'Gtk.TextBuffer' to be attached to the 'Gtk.TextView'
+  -> IO ()          -- ^ Returns nothing
 refreshSyntaxHighlighting textBuffer = do
   removeAllHighlights textBuffer
   text <- getTextFromBuffer textBuffer
   let highlights = highlightSyntax text
   applyHighlightsToBuffer textBuffer highlights
 
-removeAllHighlights :: Gtk.TextBuffer -> IO ()
+-- | Remove all highlighting tags from a given 'Gtk.TextBuffer'
+removeAllHighlights
+  :: Gtk.TextBuffer -- ^ The 'Gtk.TextBuffer' to be attached to the 'Gtk.TextView'
+  -> IO ()          -- ^ Returns nothing
 removeAllHighlights buffer = do
   (start, end) <- getBufferBounds buffer
   Gtk.textBufferRemoveAllTags buffer start end
 
-handleMarkSet :: Gtk.TextBuffer -> Gtk.TextIter -> Gtk.TextMark -> IO ()
+-- | Handle the 'Gtk.TextBuffer' 'markSet' event
+handleMarkSet
+  :: Gtk.TextBuffer -- ^ The 'Gtk.TextBuffer' to be attached to the 'Gtk.TextView'
+  -> Gtk.TextIter   -- ^ The 'Gtk.TextIter' of the cursor position
+  -> Gtk.TextMark   -- ^ The 'Gtk.TextMark' of the cursor position
+  -> IO ()          -- ^ Returns nothing
 handleMarkSet textBuffer iter mark = do
   markName <- Gtk.textMarkGetName mark
   when (markName == Just "insert") $ do
@@ -90,7 +108,10 @@ handleMarkSet textBuffer iter mark = do
     mapM_ (applyHighlightsToBuffer textBuffer) (highlightMatchingBracket entireText cursorPos)
 
 -- | Identifies the word at the given position in a text.
-identifyWord :: T.Text -> Int -> T.Text
+identifyWord
+  :: T.Text -- ^ The text to be searched through
+  -> Int    -- ^ The position of the cursor
+  -> T.Text -- ^ Returns the word at the cursor position
 identifyWord text pos
   | T.null text = T.empty
   | otherwise = T.reverse (T.takeWhile isLetter (T.reverse beginning)) `T.append` T.takeWhile isLetter remainder
@@ -100,7 +121,9 @@ identifyWord text pos
 -- | Remove two highlighting tags from a given 'Gtk.TextBuffer', namely:
 -- * WordHighlight - The tag that highlights all occurrences of a word at the cursor position
 -- * BracketHighlight - The tag that highlights the matching bracket of the cursor
-removeHighlighting :: Gtk.TextBuffer -> IO ()
+removeHighlighting
+  :: Gtk.TextBuffer -- ^ The 'Gtk.TextBuffer' where the highlighting tags should be removed
+  -> IO ()          -- ^ Returns nothing
 removeHighlighting buffer = do
   (start, end) <- getBufferBounds buffer
   Gtk.textBufferRemoveTagByName buffer (T.pack $ show WordHighlight) start end

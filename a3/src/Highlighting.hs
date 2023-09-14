@@ -9,11 +9,15 @@ where
 import Control.Monad (forM_)
 import qualified Data.Text as T
 import qualified GI.Gtk as Gtk
+import GtkHelpers (getBufferBounds)
 import Syntax (StyleTag (..))
 import SyntaxCore (Highlight (..), Range (..))
 
--- | Takes a Gtk.TextBuffer and a list of Highlights, and applies the corresponding tags to the buffer.
-applyHighlightsToBuffer :: Gtk.TextBuffer -> [Highlight] -> IO ()
+-- | Takes a 'Gtk.TextBuffer' and a list of Highlights, and applies the corresponding tags to the buffer.
+applyHighlightsToBuffer
+  :: Gtk.TextBuffer -- ^ TextBuffer where highlights should be applied
+  -> [Highlight]    -- ^ List of Highlights to be applied
+  -> IO ()          -- ^ Returns nothing
 applyHighlightsToBuffer textBuffer highlights = do
   tagTable <- Gtk.textBufferGetTagTable textBuffer
   forM_ highlights $ \(Highlight style (Range (start, end))) -> do
@@ -22,7 +26,11 @@ applyHighlightsToBuffer textBuffer highlights = do
     eIter <- getIterAtOffset textBuffer end
     Gtk.textBufferApplyTag textBuffer tag sIter eIter
 
-getTag :: Gtk.TextTagTable -> StyleTag -> IO Gtk.TextTag
+-- | Retrieves or creates a 'Gtk.TextTag' from a 'Gtk.TextTagTable' by name
+getTag
+  :: Gtk.TextTagTable -- ^ TagTable where all available tags are stored
+  -> StyleTag         -- ^ StyleTag name to be retrieved
+  -> IO Gtk.TextTag   -- ^ Returns the found Tag or creates it if it doesn't
 getTag tagTable style = do
   let tagName = T.pack $ show style
   mTag <- Gtk.textTagTableLookup tagTable tagName
@@ -33,13 +41,9 @@ getTag tagTable style = do
       return newTag
     Just tag -> return tag
 
-getIterAtOffset :: Gtk.TextBuffer -> Int -> IO Gtk.TextIter
+-- | Helper function that retrieves a 'Gtk.TextIter' for a specific position in a 'Gtk.TextBuffer'
+getIterAtOffset
+  :: Gtk.TextBuffer   -- ^ TextBuffer where iterator should be retrieved
+  -> Int              -- ^ Integer offset position
+  -> IO Gtk.TextIter  -- ^ Returns the found iterator
 getIterAtOffset textBuffer offset = Gtk.textBufferGetIterAtOffset textBuffer (fromIntegral offset)
-
--- | Fetches the start and end iterators of a given 'Gtk.TextBuffer'.
--- Returns a tuple containing the start and end iterators.
-getBufferBounds :: Gtk.TextBuffer -> IO (Gtk.TextIter, Gtk.TextIter)
-getBufferBounds buffer = do
-  startIter <- Gtk.textBufferGetStartIter buffer
-  endIter <- Gtk.textBufferGetEndIter buffer
-  return (startIter, endIter)
