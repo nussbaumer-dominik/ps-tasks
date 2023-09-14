@@ -200,7 +200,10 @@ function parseValues(valueTokens) {
     while (valueTokens.length > 0) {
         const token = valueTokens[0];
         const next = valueTokens[1];
-        if (isFunctionCall(valueTokens)) {
+        if (isFunctionDefinition(valueTokens)) {
+            resultValues.push(Value.createFunctionDefinition(parseFunctionDefinition(valueTokens)));
+        }
+        else if (isFunctionCall(valueTokens)) {
             resultValues.push(Value.createFunctionCall(parseFunctionCall(valueTokens)));
         } else if ((token.type === Type.NUMBER || token.type === Type.ENTITY) && (next === undefined || next.type === Type.COMMA || next.type === Type.RSQUARE)) {
             resultValues.push(parseValue([token]))

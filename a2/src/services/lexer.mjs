@@ -3,65 +3,56 @@ import {Type} from "../models/type.mjs";
 
 
 const wordBreaks = [' ', '(', ')', '{', '}', ',', '[', ']', ':', '=', '>', '<', '+', '-', '*', '/', '%', '#'];
+const simpleTokenMapping = {
+    "(": Type.LPAREN,
+    ")": Type.RPAREN,
+    "{": Type.LCURLY,
+    "}": Type.RCURLY,
+    "[": Type.LSQUARE,
+    "]": Type.RSQUARE,
+    ",": Type.COMMA,
+}
 
+/**
+ * Tokenizes a single line
+ * @param input
+ * @returns {Token[]} - A Tokenized Version of the input
+ */
 function lex(input) {
     if (input === undefined) {
         return [];
     }
 
     let tokens = [];
-    //let inputSplit = input.split(' ');
     let currentPos = 0;
 
+    lineLoop:
     while (currentPos < input.length) {
         let char = input[currentPos];
 
-        if (char === '#') {
-            tokens.push(new Token(Type.COMMENT, input.substring(currentPos, input.length), currentPos));
-            currentPos = input.length;
-        }
-
-        //skip whitespace
+        // ignore whitespace
         if (char === ' ') {
             currentPos++;
             continue;
         }
-        if (char === '(') {
-            tokens.push(new Token(Type.LPAREN, '(', currentPos));
-            currentPos++;
+
+        // There are no closing comment tags, so just strip the whole line
+        if (char === '#') {
+            tokens.push(new Token(Type.COMMENT, input.substring(currentPos, input.length), currentPos));
+            currentPos = input.length;
             continue;
         }
-        if (char === ')') {
-            tokens.push(new Token(Type.RPAREN, ')', currentPos));
-            currentPos++;
-            continue;
+
+        // Lex simple one character tokens
+        for (let [character, type] of Object.entries(simpleTokenMapping)) {
+            if(char === character) {
+                tokens.push(new Token(type, char, currentPos));
+                currentPos++;
+                continue lineLoop;
+            }
         }
-        if (char === '{') {
-            tokens.push(new Token(Type.LCURLY, '{', currentPos));
-            currentPos++;
-            continue;
-        }
-        if (char === '}') {
-            tokens.push(new Token(Type.RCURLY, '}', currentPos));
-            currentPos++;
-            continue;
-        }
-        if (char === '[') {
-            tokens.push(new Token(Type.LSQUARE, '[', currentPos));
-            currentPos++;
-            continue;
-        }
-        if (char === ']') {
-            tokens.push(new Token(Type.RSQUARE, ']', currentPos));
-            currentPos++;
-            continue;
-        }
-        if (char === ',') {
-            tokens.push(new Token(Type.COMMA, ',', currentPos));
-            currentPos++;
-            continue;
-        }
-        //check for assignment :=
+
+        // check for assignment :=
         if (char === ':' && currentPos + 1 < input.length ) {
             if (input[currentPos + 1] !== '=') {
                 throw new Error("Invalid token " + char + input[currentPos + 1]);
@@ -70,7 +61,8 @@ function lex(input) {
             currentPos = currentPos + 2;
             continue;
         }
-        //check for function lambda =>
+
+        // check for function lambda =>
         if (char === '=' && currentPos + 1 < input.length) {
             if (input[currentPos + 1] !== '>') {
                 throw new Error("Invalid token " + char + input[currentPos + 1]);
@@ -80,7 +72,7 @@ function lex(input) {
             continue;
         }
 
-        //check the word length
+        // No specific Type found --> it has to be a word or number
         let wordLength = 1;
         let word = input[currentPos];
         while (currentPos + wordLength <= input.length) {
@@ -99,6 +91,11 @@ function lex(input) {
     return tokens
 }
 
+/**
+ * Checks if a 'word' is a number or an entity
+ * @param word
+ * @returns {Type} - Number or Entity
+ */
 function getType(word) {
     //check if word is a number
     if (!isNaN(word)) {

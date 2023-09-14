@@ -1,16 +1,16 @@
 #!/usr/bin/env node
-
-//1. read file from disc
 import fs from 'fs';
 import readline from 'readline';
 import lex from './services/lexer.mjs';
 import parse from "./services/parser.mjs";
 import interpret from "./services/interpreter.mjs";
 
-//const filePath = 'demo-code.txt';
-const filePath = 'loop.txt';
-//const filePath = 'avg.txt';
-//const filePath = 'isPrime.txt';
+//1. read file from disc
+
+const filePath = 'examples/demo-code.txt';
+//const filePath = 'examples/loop.txt';
+//const filePath = 'examples/avg.txt';
+//const filePath = 'examples/isPrime.txt';
 
 // Create a readable stream from the file
 const fileStream = fs.createReadStream(filePath);
@@ -28,6 +28,7 @@ rl.on('line', (line) => {
     lexResult.push(...lex(line));
 });
 
+// Event handler for when all lines have been processed
 rl.on('close',  ()=> {
     // console.log(`Lexing result: \n ${JSON.stringify(lexResult, null, 2)}`);
     const parseResult = parse(lexResult);
