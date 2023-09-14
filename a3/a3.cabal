@@ -27,9 +27,11 @@ library
   exposed-modules:
       FileHandler
       FileOpener
+      GtkHelpers
       Highlighting
       Menu
       Syntax
+      SyntaxCore
       TextEditor
       TextView
   other-modules:
