@@ -17,6 +17,11 @@ interface Calculator {
     suspend fun consumeOutput(callback: (output: String) -> Unit)
 
     /**
+     * Send come kind of user input to the calculator
+     * */
+    suspend fun sendInput(line: String)
+
+    /**
      * Get the current operation mode of the calculator
      * */
     fun getCurrentMode(): OperationMode

@@ -36,11 +36,6 @@ class BaseCalculator(
      * Register data structure holding data entries at register positions
      * */
     private val register: Register = BaseRegister(initialRegisterValues),
-
-    /**
-     * A callback that can be used to receive the next line of input
-     * */
-    private val requestInputCallback: InputCallback,
 ) : Calculator {
     /**
      * Stream of commands to be executed
@@ -51,6 +46,12 @@ class BaseCalculator(
      * Current operation more of the calculator
      */
     private var mode: OperationMode = OperationMode.Executing
+
+    /**
+     * Stream of data input by the user read line by line
+     * */
+    private val inputStream: Channel<String> = Channel(capacity = Channel.UNLIMITED)
+
 
     /**
      * Stream of data output most probably printed to stdout
@@ -72,6 +73,10 @@ class BaseCalculator(
 
     override suspend fun consumeOutput(callback: (output: String) -> Unit) = withContext(Dispatchers.IO) {
         outputStream.consumeEach { output -> callback(output) }
+    }
+
+    override suspend fun sendInput(line: String) {
+        inputStream.send(line)
     }
 
     override fun getCurrentMode(): OperationMode =
@@ -169,7 +174,7 @@ class BaseCalculator(
             }
 
             is ReadInputOperation -> {
-                operation.execute(dataStack, requestInputCallback)
+                operation.execute(dataStack, inputStream)
                 OperationMode.Executing
             }
 

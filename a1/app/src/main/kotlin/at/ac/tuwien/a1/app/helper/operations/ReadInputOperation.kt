@@ -1,6 +1,5 @@
 package at.ac.tuwien.a1.app.helper.operations
 
-import at.ac.tuwien.a1.app.calculator.InputCallback
 import at.ac.tuwien.a1.app.helper.data.DataEntry
 import at.ac.tuwien.a1.app.helper.data.stack.DataStack
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -23,8 +22,9 @@ fun Char.isReadInputOperation(): Boolean =
 fun Char.toReadInputOperation(): ReadInputOperation =
     if (isReadInputOperation()) ReadInputOperation else error("Operation for representation $this not found")
 
-suspend fun ReadInputOperation.execute(dataStack: DataStack, inputRequest: InputCallback) {
-    val nextValue = inputRequest()
+suspend fun ReadInputOperation.execute(dataStack: DataStack, inputStream: ReceiveChannel<String>) {
+    println("Reading next available input!")
+    val nextValue = inputStream.receive()
 
     nextValue.toIntOrNull()?.let { intValue ->
         dataStack.push(DataEntry.IntegerEntry(intValue))
