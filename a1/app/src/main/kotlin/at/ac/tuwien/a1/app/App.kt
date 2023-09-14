@@ -11,13 +11,16 @@ import kotlin.concurrent.thread
  * Main entry point of the application
  * */
 fun main() = runBlocking {
-    val c = "4!4\$_1+\$@"
-    val a = "3!3!1-2!1=()5!($c)@2\$*"
-
     // Setup and calculator with its initial register values
     val calculator: Calculator = BaseCalculator(
         initialRegisterValues = mapOf(
-            'a' to DataEntry.StringEntry("'($a)3!3\$3!@2\$\""),
+            'a' to DataEntry.StringEntry("y@x@"),
+            // Program to ask for input and execute it repeatedly
+            'x' to DataEntry.StringEntry("'@@\"x@"),
+            // Output welcome message
+            'y' to DataEntry.StringEntry("z\""),
+            // Welcome message
+            'z' to DataEntry.StringEntry("Welcome user!"),
         ),
     )
 

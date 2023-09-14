@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     // Define dependencies here
+    testImplementation(libs.kotlin.coroutines.test)
 }
 
 application {

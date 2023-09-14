@@ -16,8 +16,6 @@ import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.withContext
 import kotlin.math.pow
 
-typealias InputCallback = () -> String
-
 /**
  * Base version of a calculator using a stack for processing the input
  * */
@@ -84,14 +82,18 @@ class BaseCalculator(
 
     private suspend fun Command.process() {
         mode = process(mode)
-        dataStack.debug()
-        register.debug()
-        commandStream.debug()
-        println("============================================")
+        if (DEBUG) {
+            dataStack.debug()
+            register.debug()
+            commandStream.debug()
+            println("========================================================================================")
+        }
     }
 
     private suspend fun Command.process(mode: OperationMode): OperationMode {
-        println("Processing command \"$this\" in mode \"$mode\"")
+        if (DEBUG) {
+            println("Processing command \"$this\" in mode \"$mode\"")
+        }
 
         return when (val operationMode = mode) {
             is OperationMode.Executing -> operationMode.execute(this)
@@ -174,7 +176,7 @@ class BaseCalculator(
             }
 
             is ReadInputOperation -> {
-                operation.execute(dataStack, inputStream)
+                operation.execute(dataStack, inputStream, outputStream)
                 OperationMode.Executing
             }
 
@@ -255,4 +257,8 @@ class BaseCalculator(
 
     private fun DataEntry.IntegerEntry.adjustDigitBy(digit: Int): DataEntry.IntegerEntry =
         copy(value = value * 10 + digit)
+
+    companion object {
+        const val DEBUG: Boolean = false
+    }
 }

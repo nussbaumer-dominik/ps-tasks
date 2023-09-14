@@ -3,6 +3,7 @@ package at.ac.tuwien.a1.app.helper.operations
 import at.ac.tuwien.a1.app.helper.data.DataEntry
 import at.ac.tuwien.a1.app.helper.data.stack.DataStack
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.SendChannel
 
 /**
  * Representation of a read input operation
@@ -22,8 +23,12 @@ fun Char.isReadInputOperation(): Boolean =
 fun Char.toReadInputOperation(): ReadInputOperation =
     if (isReadInputOperation()) ReadInputOperation else error("Operation for representation $this not found")
 
-suspend fun ReadInputOperation.execute(dataStack: DataStack, inputStream: ReceiveChannel<String>) {
-    println("Reading next available input!")
+suspend fun ReadInputOperation.execute(
+    dataStack: DataStack,
+    inputStream: ReceiveChannel<String>,
+    outputStream: SendChannel<String>,
+) {
+    outputStream.send("Reading next available input!")
     val nextValue = inputStream.receive()
 
     nextValue.toIntOrNull()?.let { intValue ->
