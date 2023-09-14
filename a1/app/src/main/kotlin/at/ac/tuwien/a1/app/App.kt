@@ -15,14 +15,14 @@ fun main() = runBlocking {
     val calculator: Calculator = BaseCalculator(
         initialRegisterValues = mapOf(
             'a' to DataEntry.StringEntry("y@x@"),
-            'f' to DataEntry.StringEntry(" 0 0 " +" (#3-4!- (4!4!6+!+ 4!1+ 4$4$  4!4$2!@) (1$1$) (4!4\$_1+\$@)@) 2!@" // calculate sum
-                    +" 2!\" " // print sum
+            'f' to DataEntry.StringEntry("'@@ 0 0 " +" (#3-4!- (4!4!6+!+ 4!1+ 4$4$  4!4$2!@) (1$1$) (4!4\$_1+\$@)@) 2!@" // calculate sum
+                    +" (Sum: )\"2!\" " // print sum
                     +" .+#1-/ " // calculate avg
-                    +" 2!\" " // print avg
+                    +" (Avg: )\"2!\" " // print avg
                     + " 0 0 " +" (#4-4!- (4!4!7+!7!-2!*+ 4!1+ 4$4$ 4!4$2!@) (1$1$2$) (4!4\$_1+\$@)@) 2!@" // calculate sum of squared diffs
-                    +" 2!\" " // print squared diff sum
+                    +" (Squared diff sum: )\"2!\" " // print squared diff sum
                     +"#1-.+/" //calculate variance
-                    +" \" " // print variance
+                    +" (Variance: )\"\" " // print variance
                 ),
             // Program to ask for input and execute it repeatedly
             'x' to DataEntry.StringEntry("'@@\"x@"),
