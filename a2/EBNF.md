@@ -6,7 +6,7 @@
     | <value>
     | <EOL>
 
-<assignment> ::= <name> `:=` <basic>
+<assignment> ::= <name> `:=` <value> <EOL>
 
 <names> ::= <name>
     | <names> ’,’ <name>
@@ -21,5 +21,5 @@
     | <functionDefinition>
     
 <functionCall> ::= <name>'{'<values>'}'
-<functionDefinition> ::= ’(’<names>’)=>{’ <expr> ’}’
+<functionDefinition> ::= ’(’<names>’)=>{’ <prog> ’}’
 ```
