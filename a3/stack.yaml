@@ -1,5 +1,5 @@
 #resolver:
-  #  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/3.yaml
+#  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/21/3.yaml
 
 resolver: lts-21.3
 
@@ -9,9 +9,7 @@ packages:
 extra-deps:
   - gi-gtk-3.0.41
   - haskell-gi-0.26.7
-  - megaparsec-9.4.1
   - void-0.7.3
-  - gi-pango-1.0.29
   - gi-gdk-3.0.28
   - haddock-api-2.27.0
 
