@@ -24,7 +24,8 @@ fun main() = runBlocking {
                     + "#1-.+/" //calculate variance
                     + " (Variance: )\"\" " // print variance
                 ),
-            'm' to  DataEntry.StringEntry(" 0 3! 0 0" // index value start offset
+            'c' to DataEntry.StringEntry("(#1> (#1+!\"#$ 2!@) (1$) (4!4\$_1+\$@)@) 2!@"),
+            'm' to  DataEntry.StringEntry("'@@ 0 3! 0 0" // index value start offset
                     + "(#5-4!- " // loop over all elements
                     + "(3!7+!" // get next element
                     + "(6!> (3! 4!8+!)(6!6!) (4!4\$_1+$@)@)@  6!6!1+ 6$6$6$6$" // update biggest element, index & offset
@@ -36,7 +37,7 @@ fun main() = runBlocking {
                     + "(#2% (#2/~#+!)(#2/~#+! #2/~#1++! +.+2/) (4!4\$_1+$@)@)@ \"" // calculate median of sorted list
             ),
             // Program to ask for input and execute it repeatedly
-            'x' to DataEntry.StringEntry("'@@\"x@"),
+            'x' to DataEntry.StringEntry("'@@c@x@"),
             // Output welcome message
             'y' to DataEntry.StringEntry("z\""),
             // Welcome message
